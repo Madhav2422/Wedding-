@@ -244,7 +244,13 @@ function Toran() {
 /* ------------------------------------------------------------------ */
 /*  The façade                                                         */
 /* ------------------------------------------------------------------ */
-function GateFrame({ className }: { className?: string }) {
+type GateFrameProps = {
+  className?: string;
+  /** Draw the balconies & lanterns either side (off for the link-preview image, where the names go). */
+  wings?: boolean;
+};
+
+function GateFrame({ className, wings = true }: GateFrameProps) {
   return (
     <svg className={className} viewBox="0 0 800 1400" aria-hidden="true" focusable="false">
       <defs>
@@ -377,10 +383,14 @@ function GateFrame({ className }: { className?: string }) {
       </g>
 
       {/* ---------- wide screens: balconies & lanterns either side ---------- */}
-      <Jharokha cx={-330} />
-      <Jharokha cx={1130} />
-      <Lantern cx={-120} delay="-0.6s" />
-      <Lantern cx={920} delay="-1.9s" />
+      {wings && (
+        <>
+          <Jharokha cx={-330} />
+          <Jharokha cx={1130} />
+          <Lantern cx={-120} delay="-0.6s" />
+          <Lantern cx={920} delay="-1.9s" />
+        </>
+      )}
 
       {/* ---------- floor & steps ---------- */}
       <rect x="-2800" y="1341" width="6400" height="1259" fill="url(#gf-floor)" />
