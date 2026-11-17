@@ -1,0 +1,185 @@
+/* ---------- gold dust ---------- */
+.dust {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dust span {
+  position: absolute;
+  bottom: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff8dc 0%, #f5cf6a 45%, rgba(245, 207, 106, 0) 72%);
+  box-shadow: 0 0 6px 1px rgba(255, 214, 120, 0.55);
+  opacity: 0;
+  animation-name: rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: var(--op);
+  }
+  50% {
+    transform: translate3d(calc(var(--drift) * 0.6), -55vh, 0);
+  }
+  85% {
+    opacity: var(--op);
+  }
+  100% {
+    transform: translate3d(var(--drift), -110vh, 0);
+    opacity: 0;
+  }
+}
+
+/* ---------- petals ---------- */
+.petals {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fixed {
+  position: fixed;
+  z-index: 60;
+}
+
+.petal {
+  position: absolute;
+  top: -40px;
+  display: block;
+  border-radius: 0 100% 0 100%;
+  box-shadow: inset -1px -2px 3px rgba(0, 0, 0, 0.18);
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  will-change: transform;
+}
+
+.rose {
+  background: radial-gradient(circle at 30% 25%, #ff9aae 0%, #e11d48 45%, #9f1239 100%);
+}
+
+.pink {
+  background: radial-gradient(circle at 30% 25%, #ffe1e8 0%, #f472b6 55%, #be185d 100%);
+}
+
+.marigold {
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(circle at 35% 30%, #ffd27a 0%, #f97316 60%, #c2410c 100%);
+}
+
+.yellow {
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(circle at 35% 30%, #fff3b0 0%, #facc15 55%, #ca8a04 100%);
+}
+
+@keyframes fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) rotateY(0deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  25% {
+    transform: translate3d(calc(var(--drift) * 0.6), 28vh, 0) rotate(calc(var(--spin) * 0.25)) rotateY(180deg);
+  }
+  50% {
+    transform: translate3d(calc(var(--drift) * -0.2), 56vh, 0) rotate(calc(var(--spin) * 0.5)) rotateY(360deg);
+  }
+  75% {
+    transform: translate3d(calc(var(--drift) * 0.8), 84vh, 0) rotate(calc(var(--spin) * 0.75)) rotateY(540deg);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift), calc(110vh + 40px), 0) rotate(var(--spin)) rotateY(720deg);
+    opacity: 0;
+  }
+}
+
+/* ---------- music button ---------- */
+.music {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 70;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(184, 134, 43, 0.7);
+  background: radial-gradient(circle at 35% 30%, #8a1528, #4a0a15);
+  box-shadow: 0 6px 18px -6px rgba(74, 10, 21, 0.6), inset 0 0 0 3px rgba(233, 195, 94, 0.15);
+  cursor: pointer;
+  animation: musicIn 0.6s ease 4.6s both;
+}
+
+@keyframes musicIn {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+}
+
+.bars i {
+  display: block;
+  width: 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: #f3d684;
+}
+
+.barsOn i {
+  animation: bar 0.9s ease-in-out infinite alternate;
+}
+
+.barsOn i:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.barsOn i:nth-child(3) {
+  animation-delay: -0.6s;
+}
+
+.barsOn i:nth-child(4) {
+  animation-delay: -0.15s;
+}
+
+@keyframes bar {
+  from {
+    height: 4px;
+  }
+  to {
+    height: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dust span,
+  .petal,
+  .barsOn i {
+    animation: none;
+  }
+  .petal {
+    display: none;
+  }
+}
