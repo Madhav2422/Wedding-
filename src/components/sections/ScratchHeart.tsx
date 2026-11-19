@@ -37,13 +37,11 @@ const BURST = (() => {
 type Point = { x: number; y: number };
 
 type Props = {
-  /** Start drawing the foil once the section is on screen. */
-  active: boolean;
   revealed: boolean;
   onReveal: () => void;
 };
 
-export default function ScratchHeart({ active, revealed, onReveal }: Props) {
+export default function ScratchHeart({ revealed, onReveal }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glintRef = useRef<HTMLSpanElement>(null);
@@ -55,6 +53,8 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
     lastCheck: 0,
     width: 0,
     done: false,
+    /** Bumped on every repaint, so an older half-finished paint stops. */
+    gen: 0,
   });
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
@@ -66,11 +66,19 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
     onReveal();
   }, [onReveal]);
 
-  /** Paint the gold foil over the heart. */
+  /**
+   * Paint the gold foil over the heart — in a few small steps, each in an idle moment, so the
+   * phone never freezes for a frame while the guest is scrolling.
+   */
   const paint = useCallback(async () => {
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
     if (!wrap || !canvas || st.current.done) return;
+    const gen = ++st.current.gen;
+    const step = async () => {
+      await idle();
+      return gen === st.current.gen && !st.current.done;
+    };
     const { width, height } = wrap.getBoundingClientRect();
     if (width < 20) return;
     st.current.width = width;
@@ -106,28 +114,37 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
     for (const [o, c] of stops) g.addColorStop(o, c);
     ctx.fillStyle = g;
     ctx.fill(heart);
+    if (!(await step())) return;
 
     ctx.save();
     ctx.clip(heart);
-    // brushed-metal lines
+    // brushed-metal lines — one path, one stroke (hundreds of separate draws stalled phones)
     ctx.globalAlpha = 0.16;
     ctx.strokeStyle = "#fff8dc";
     ctx.lineWidth = 0.22;
+    ctx.beginPath();
     for (let x = -VB_H; x < VB_W; x += 1.6) {
-      ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x + VB_H, VB_H);
-      ctx.stroke();
     }
-    // glitter
+    ctx.stroke();
+    if (!(await step())) return;
+    // glitter — grouped into four brightness levels, one fill each
     const rnd = seeded(77);
-    ctx.fillStyle = "#fffbe6";
+    const levels = [new Path2D(), new Path2D(), new Path2D(), new Path2D()];
     for (let i = 0; i < 170; i++) {
-      ctx.globalAlpha = 0.3 + rnd() * 0.6;
-      ctx.beginPath();
-      ctx.arc(rnd() * VB_W, rnd() * VB_H, 0.15 + rnd() * 0.45, 0, Math.PI * 2);
-      ctx.fill();
+      const level = levels[Math.min(3, Math.floor(rnd() * 4))];
+      const x = rnd() * VB_W;
+      const y = rnd() * VB_H;
+      const r = 0.15 + rnd() * 0.45;
+      level.moveTo(x + r, y);
+      level.arc(x, y, r, 0, Math.PI * 2);
     }
+    ctx.fillStyle = "#fffbe6";
+    levels.forEach((dots, i) => {
+      ctx.globalAlpha = 0.3 + (i + 0.5) * 0.15;
+      ctx.fill(dots);
+    });
     ctx.globalAlpha = 1;
     // inner dotted heart
     ctx.setLineDash([0.01, 2.3]);
@@ -140,6 +157,7 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
     ctx.stroke(heart);
     ctx.restore();
     ctx.setLineDash([]);
+    if (!(await step())) return;
 
     // embossed edge
     ctx.lineWidth = 1.4;
@@ -161,25 +179,51 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
     ctx.font = "8px serif";
     ctx.fillStyle = "#9b1c31";
     ctx.fillText("♥", 50, 56);
+    if (!(await step())) return;
 
     // measure how much foil there is, so we know when enough is scratched off
-    st.current.total = countOpaque(ctx, canvas.width, canvas.height);
+    st.current.total = countOpaque(canvas);
     setReady(true);
   }, []);
 
-  // draw when the section first comes into view, and again if the width changes
+  // The very first drawing canvas on a page is slow to set up (a one-off ~20 ms on a phone).
+  // Get that out of the way while the guest is still at the palace gates, not mid-scroll.
+  useEffect(
+    () =>
+      whenIdle(() => {
+        const warm = document.createElement("canvas");
+        warm.width = warm.height = 2;
+        warm.getContext("2d", { willReadFrequently: true })?.fillRect(0, 0, 1, 1);
+      }),
+    [],
+  );
+
+  // Draw the foil while the guest is still about a page away, in idle time, so arriving on the
+  // page is instant; draw again if the width changes.
   useEffect(() => {
-    if (!active) return;
-    paint();
     const wrap = wrapRef.current;
     if (!wrap) return;
+    let cancelIdle: (() => void) | undefined;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        cancelIdle = whenIdle(() => paint());
+      },
+      { rootMargin: "100% 0px" },
+    );
+    io.observe(wrap);
     const ro = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width;
-      if (!st.current.done && Math.abs(w - st.current.width) > 2) paint();
+      if (st.current.width && !st.current.done && Math.abs(w - st.current.width) > 2) paint();
     });
     ro.observe(wrap);
-    return () => ro.disconnect();
-  }, [active, paint]);
+    return () => {
+      io.disconnect();
+      ro.disconnect();
+      cancelIdle?.();
+    };
+  }, [paint]);
 
   const toCanvas = (clientX: number, clientY: number): Point => {
     const canvas = canvasRef.current!;
@@ -217,9 +261,8 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
 
   const checkProgress = () => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d", { willReadFrequently: true });
-    if (!canvas || !ctx || !st.current.total) return;
-    const cleared = 1 - countOpaque(ctx, canvas.width, canvas.height) / st.current.total;
+    if (!canvas || !st.current.total) return;
+    const cleared = 1 - countOpaque(canvas) / st.current.total;
     if (cleared >= REVEAL_AT) finish();
   };
 
@@ -326,15 +369,41 @@ export default function ScratchHeart({ active, revealed, onReveal }: Props) {
   );
 }
 
-/** Count (sampled) pixels that still have foil on them. */
-function countOpaque(ctx: CanvasRenderingContext2D, w: number, h: number) {
+let probe: HTMLCanvasElement | null = null;
+
+/**
+ * Count the pixels that still have foil on them — on a small copy of the canvas. Reading back
+ * every pixel of the full-size canvas froze phones for a moment right as the page scrolled in.
+ */
+function countOpaque(canvas: HTMLCanvasElement) {
+  const w = Math.max(1, Math.round(canvas.width / SAMPLE));
+  const h = Math.max(1, Math.round(canvas.height / SAMPLE));
+  probe ??= document.createElement("canvas");
+  probe.width = w;
+  probe.height = h;
+  const ctx = probe.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return 0;
+  ctx.imageSmoothingEnabled = false; // plain sampling: much faster, and all we need for counting
+  ctx.drawImage(canvas, 0, 0, w, h);
   const data = ctx.getImageData(0, 0, w, h).data;
   let count = 0;
-  for (let y = 0; y < h; y += SAMPLE) {
-    const row = y * w;
-    for (let x = 0; x < w; x += SAMPLE) {
-      if (data[(row + x) * 4 + 3] > 100) count++;
-    }
-  }
+  for (let i = 3; i < data.length; i += 4) if (data[i] > 100) count++;
   return count;
+}
+
+/** Resolves at the browser's next idle moment. */
+function idle() {
+  return new Promise<void>((resolve) => {
+    whenIdle(resolve);
+  });
+}
+
+/** Run when the browser is idle (Safari has no requestIdleCallback, so it gets a short timeout). */
+function whenIdle(fn: () => void) {
+  if (typeof window.requestIdleCallback === "function") {
+    const id = window.requestIdleCallback(fn, { timeout: 600 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const id = window.setTimeout(fn, 120);
+  return () => window.clearTimeout(id);
 }

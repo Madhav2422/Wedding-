@@ -143,9 +143,11 @@
 .bars i {
   display: block;
   width: 3px;
-  height: 4px;
+  height: 16px;
   border-radius: 2px;
   background: #f3d684;
+  transform: scaleY(0.25);
+  transform-origin: 50% 100%;
 }
 
 .barsOn i {
@@ -164,12 +166,13 @@
   animation-delay: -0.15s;
 }
 
+/* scale, not height: a height animation would re-lay-out the page every frame */
 @keyframes bar {
   from {
-    height: 4px;
+    transform: scaleY(0.25);
   }
   to {
-    height: 16px;
+    transform: scaleY(1);
   }
 }
 

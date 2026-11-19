@@ -48,6 +48,16 @@ html:not(.gate-locked) {
   }
 }
 
+/*
+ * Pages far from the screen pause all their animations (Invitation.tsx sets data-offscreen),
+ * so a phone only animates what the guest can actually see — scrolling stays smooth.
+ */
+[data-offscreen] *,
+[data-offscreen] *::before,
+[data-offscreen] *::after {
+  animation-play-state: paused !important;
+}
+
 /* While the palace gates are on screen the page must not scroll. */
 html.gate-locked,
 html.gate-locked body {

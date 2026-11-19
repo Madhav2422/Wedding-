@@ -1,4 +1,6 @@
-import { memo, type CSSProperties } from "react";
+"use client";
+
+import { memo, useEffect, useState, type CSSProperties } from "react";
 import { seeded } from "@/lib/random";
 import { n } from "@/lib/svg";
 import s from "./effects.module.css";
@@ -33,6 +35,17 @@ function PetalShower({
   fixed = true,
   className,
 }: Props) {
+  // A one-time shower removes itself once the last petal has landed, so dozens of invisible
+  // petals don't stay on top of the page (each is a GPU layer the phone keeps compositing).
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (loop) return;
+    const t = window.setTimeout(() => setDone(true), (startDelay + spread + maxDuration) * 1000 + 300);
+    return () => window.clearTimeout(t);
+  }, [loop, startDelay, spread, maxDuration]);
+
+  if (done) return null;
+
   const rnd = seeded(seed);
   const petals = Array.from({ length: count }, () => {
     const size = n(7 + rnd() * 9);

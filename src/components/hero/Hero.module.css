@@ -231,11 +231,31 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  position: relative;
 }
 
-/* A slow gleam across the names, only once the guest has arrived. */
-.settled .name {
-  animation: shimmer 6s ease-in-out 1.5s infinite alternate;
+/*
+ * A slow gleam across the names, once the guest has arrived: a copy of the name lit from
+ * the other side fades in and out. Only its opacity changes, which the GPU does on its own —
+ * moving the gradient instead would repaint the big names on every frame.
+ */
+.name::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  background: inherit;
+  background-size: 220% 100%;
+  background-position: 100% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settled .name::after {
+  animation: gleam 6s ease-in-out 1.5s infinite alternate;
 }
 
 .amp {
@@ -380,13 +400,13 @@
   }
 }
 
-@keyframes shimmer {
+@keyframes gleam {
   0% {
-    background-position: 0% 50%;
+    opacity: 0;
   }
   45%,
   100% {
-    background-position: 100% 50%;
+    opacity: 1;
   }
 }
 
@@ -406,7 +426,7 @@
   .mandala,
   .corner,
   .ladi,
-  .settled .name {
+  .settled .name::after {
     animation: none;
   }
 

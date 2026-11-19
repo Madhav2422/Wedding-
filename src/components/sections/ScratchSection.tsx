@@ -52,7 +52,7 @@ function ScratchSection() {
         </p>
 
         <div className={s.reveal} style={step(3)}>
-          <ScratchHeart active={inView} revealed={revealed} onReveal={onReveal} />
+          <ScratchHeart revealed={revealed} onReveal={onReveal} />
         </div>
 
         <div className={`${s.after} ${revealed ? s.afterShow : ""}`} aria-live="polite">

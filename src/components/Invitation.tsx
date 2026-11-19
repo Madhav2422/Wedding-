@@ -64,6 +64,20 @@ export default function Invitation() {
     };
   }, []);
 
+  // Pause every animation on pages that are off screen (see globals.css). One observer, no
+  // React re-renders: it only flips an attribute when a page comes near or leaves the screen.
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.toggleAttribute("data-offscreen", !e.isIntersecting);
+      },
+      // -2px: a page whose edge merely touches the screen's edge doesn't count as visible
+      { rootMargin: "-2px 0px" },
+    );
+    document.querySelectorAll("main > section").forEach((section) => io.observe(section));
+    return () => io.disconnect();
+  }, []);
+
   // Lock scrolling while the gates are on screen.
   useEffect(() => {
     document.documentElement.classList.toggle("gate-locked", stage !== "open");

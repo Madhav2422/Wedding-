@@ -49,7 +49,7 @@ export default function Hero({ revealed, settled, delay, approach }: Props) {
 
           <h1 className={s.names}>
             <span className={`${s.item} ${s.nameIn}`} style={step(1)}>
-              <span className={s.name}>{wedding.groom}</span>
+              <span className={s.name} data-text={wedding.groom}>{wedding.groom}</span>
             </span>
             <span className={`${s.item} ${s.amp}`} style={step(2)}>
               <i />
@@ -57,7 +57,7 @@ export default function Hero({ revealed, settled, delay, approach }: Props) {
               <i />
             </span>
             <span className={`${s.item} ${s.nameIn}`} style={step(3)}>
-              <span className={s.name}>{wedding.bride}</span>
+              <span className={s.name} data-text={wedding.bride}>{wedding.bride}</span>
             </span>
           </h1>
 
