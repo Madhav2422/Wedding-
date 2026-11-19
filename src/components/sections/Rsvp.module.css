@@ -41,6 +41,11 @@
     repeat-x center top / 36px 18px;
 }
 
+/* when the Aeki Beki game is the page above, the scallops sit on its peacock blue */
+:global(#aeki-beki) + .section .scallops {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='18'%3E%3Crect width='36' height='18' fill='%23061c25'/%3E%3Cpath d='M0 18C0 8 8 2 18 2S36 8 36 18Z' fill='%23f8eedd'/%3E%3Cpath d='M0 18C0 8 8 2 18 2S36 8 36 18' fill='none' stroke='%23b8862b' stroke-width='1.2'/%3E%3C/svg%3E");
+}
+
 .content {
   width: min(100%, 540px);
   display: flex;

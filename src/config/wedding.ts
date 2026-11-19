@@ -85,8 +85,8 @@ const events: readonly WeddingEvent[] = [
 ];
 
 export const wedding = {
-  groom: "Rohan",
-  bride: "Priya",
+  groom: "Raj",
+  bride: "Simran",
   /** The city everything happens in. */
   city: "Udaipur, Rajasthan",
 
@@ -125,8 +125,14 @@ export const wedding = {
     maxGuests: 10,
   },
 
-  hashtag: "#RohanWedsPriya",
+  hashtag: "#RajWedsSimran",
   signOff: "With love, the Sharma family",
+
+  /**
+   * "Aeki Beki" — the ring-in-the-milk game, shown after the wedding page: guests swirl the
+   * petals in a thali of milk to find the hidden ring. Set to false to leave it out.
+   */
+  aekiBeki: true,
 
   /** Play a soft temple-bell chime when the gates open. */
   chime: true,

@@ -68,7 +68,7 @@ number, digits only, e.g. `"919876543210"`. When a guest taps **Save our seats**
 their reply already written, and they just tap send. The message looks like this:
 
 ```
-🙏 RSVP — Rohan & Priya's wedding
+🙏 RSVP — Raj & Simran's wedding
 Name: The Kapoor family
 Joyfully attending ✅
 Guests: 3 adults, 1 child (4 plates)

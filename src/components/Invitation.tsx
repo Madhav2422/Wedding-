@@ -7,6 +7,7 @@ import MusicToggle from "./effects/MusicToggle";
 import PetalShower from "./effects/PetalShower";
 import PalaceGate, { GATE_TIMING } from "./gate/PalaceGate";
 import Hero from "./hero/Hero";
+import AekiBekiSection from "./sections/AekiBekiSection";
 import CountdownSection from "./sections/CountdownSection";
 import EventSection from "./sections/EventSection";
 import InviteSection from "./sections/InviteSection";
@@ -126,6 +127,7 @@ export default function Invitation() {
       {wedding.events.map((event, i) => (
         <EventSection key={event.id} event={event} index={i} />
       ))}
+      {wedding.aekiBeki && <AekiBekiSection />}
       <RsvpSection />
 
       {stage !== "open" && <PalaceGate stage={stage} onOpen={open} onPrepare={prepare} />}

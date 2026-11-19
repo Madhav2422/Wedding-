@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { weddingDate } from "@/config/wedding";
+import { idle, whenIdle } from "@/lib/idle";
 import { seeded } from "@/lib/random";
 import { n } from "@/lib/svg";
 import s from "./Scratch.module.css";
@@ -389,21 +390,4 @@ function countOpaque(canvas: HTMLCanvasElement) {
   let count = 0;
   for (let i = 3; i < data.length; i += 4) if (data[i] > 100) count++;
   return count;
-}
-
-/** Resolves at the browser's next idle moment. */
-function idle() {
-  return new Promise<void>((resolve) => {
-    whenIdle(resolve);
-  });
-}
-
-/** Run when the browser is idle (Safari has no requestIdleCallback, so it gets a short timeout). */
-function whenIdle(fn: () => void) {
-  if (typeof window.requestIdleCallback === "function") {
-    const id = window.requestIdleCallback(fn, { timeout: 600 });
-    return () => window.cancelIdleCallback(id);
-  }
-  const id = window.setTimeout(fn, 120);
-  return () => window.clearTimeout(id);
 }

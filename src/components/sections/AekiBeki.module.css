@@ -1,0 +1,607 @@
+/*
+ * After the pheras — "Aeki Beki", the ring-in-the-milk game.
+ * A royal peacock-blue page. Every CSS animation here is transform/opacity (GPU only);
+ * the petals themselves are drawn on one canvas that only animates while they move.
+ */
+.section {
+  --ink: #fbe9c4;
+  --soft: rgba(251, 233, 196, 0.8);
+  --accent: #f2c96b;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: clamp(60px, 9svh, 96px) 16px clamp(52px, 8svh, 88px);
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--ink);
+  background: radial-gradient(ellipse 95% 72% at 50% 50%, #0f5767 0%, #0a3a48 46%, #061c25 100%);
+  scroll-snap-align: start;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100svh;
+}
+
+/* faint peacock feathers woven into the background */
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='96'%3E%3Cpath d='M36 95C35 72 35 52 36 24' stroke='%23d9b25a' stroke-opacity='.2' fill='none'/%3E%3Cg stroke='%2347b8a8' stroke-opacity='.13' fill='none'%3E%3Cpath d='M36 82C26 74 18 62 16 48M36 82C46 74 54 62 56 48M36 68C28 60 22 50 22 38M36 68C44 60 50 50 50 38'/%3E%3C/g%3E%3Cellipse cx='36' cy='34' rx='12' ry='15' fill='%2314b8a6' fill-opacity='.13'/%3E%3Cellipse cx='36' cy='36' rx='7.5' ry='10' fill='%231d4ed8' fill-opacity='.17'/%3E%3Cellipse cx='36' cy='37.5' rx='3.6' ry='5' fill='%23020617' fill-opacity='.3'/%3E%3Cellipse cx='36' cy='34' rx='12' ry='15' fill='none' stroke='%23e9c35e' stroke-opacity='.2'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='96'%3E%3Cpath d='M36 95C35 72 35 52 36 24' stroke='%23d9b25a' stroke-opacity='.2' fill='none'/%3E%3Cg stroke='%2347b8a8' stroke-opacity='.13' fill='none'%3E%3Cpath d='M36 82C26 74 18 62 16 48M36 82C46 74 54 62 56 48M36 68C28 60 22 50 22 38M36 68C44 60 50 50 50 38'/%3E%3C/g%3E%3Cellipse cx='36' cy='34' rx='12' ry='15' fill='%2314b8a6' fill-opacity='.13'/%3E%3Cellipse cx='36' cy='36' rx='7.5' ry='10' fill='%231d4ed8' fill-opacity='.17'/%3E%3Cellipse cx='36' cy='37.5' rx='3.6' ry='5' fill='%23020617' fill-opacity='.3'/%3E%3Cellipse cx='36' cy='34' rx='12' ry='15' fill='none' stroke='%23e9c35e' stroke-opacity='.2'/%3E%3C/svg%3E");
+  background-size: 72px 96px;
+  background-position:
+    0 0,
+    36px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 20%, transparent 85%);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 20%, transparent 85%);
+}
+
+/* a string of pearls where the maroon wedding page ends */
+.pearls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background:
+    radial-gradient(circle at 50% 50%, #fff3c4 0 1.2px, #e9c35e 2px, #9a6b1f 2.7px, rgba(154, 107, 31, 0) 3.2px) 0 50% / 13px 14px repeat-x,
+    linear-gradient(180deg, #2a0512 0%, #3a0f1d 100%);
+  box-shadow: 0 1px 0 rgba(233, 195, 94, 0.45);
+}
+
+.glow {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: min(140vw, 900px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 201, 107, 0.24) 0%, rgba(242, 201, 107, 0.07) 40%, rgba(242, 201, 107, 0) 66%);
+}
+
+/* ---------- heading ---------- */
+.content {
+  position: relative;
+  width: min(100%, 520px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(4px, 1.1svh, 10px);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.9s ease,
+    transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(0.2s + var(--i) * 0.14s);
+}
+
+.inView .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.kicker {
+  font-family: var(--font-cinzel), serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2px 0 0;
+  font-weight: 400;
+}
+
+.deva {
+  font-family: var(--font-deva), serif;
+  font-size: clamp(17px, 4.4vw, 22px);
+  line-height: 1.3;
+  color: var(--soft);
+}
+
+.name {
+  font-family: var(--font-script), cursive;
+  font-size: clamp(52px, 14vw, 84px);
+  line-height: 1.05;
+  padding: 0 0.25em 0.1em;
+  background: linear-gradient(100deg, #c8952e 0%, #fff1b8 42%, #e9c35e 62%, #c8952e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sub {
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-size: clamp(16px, 4.3vw, 20px);
+  line-height: 1.35;
+  color: var(--soft);
+  max-width: 30ch;
+  text-wrap: balance;
+}
+
+/* ---------- the thali ---------- */
+.stage {
+  margin-top: clamp(10px, 2.2svh, 22px);
+}
+
+.bowl {
+  position: relative;
+  width: min(84vw, 44svh, 420px);
+  aspect-ratio: 1;
+  container-type: inline-size;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.bowlShadow {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: -8%;
+  height: 20%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+.rim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.milk {
+  position: absolute;
+  inset: 7%;
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  touch-action: none; /* swirling must not scroll the page */
+  cursor: grab;
+}
+
+.milk:active {
+  cursor: grabbing;
+}
+
+/* the milk's surface catching the light — drifts and breathes, so it always looks liquid */
+.sheen {
+  position: absolute;
+  inset: 7%;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sheen::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 6%;
+  width: 52%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(-32deg);
+  animation: sheenDrift 7s ease-in-out infinite alternate;
+}
+
+/* a glowing fingertip showing how to swirl — until the guest touches the milk */
+.hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16cqw;
+  height: 16cqw;
+  margin: -8cqw 0 0 -8cqw;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 16%, rgba(255, 240, 200, 0.5) 38%, rgba(255, 240, 200, 0) 70%);
+}
+
+.inView .hint {
+  animation: swirlHint 3.6s ease-in-out 1.6s infinite;
+}
+
+.touched .hint,
+.done .hint {
+  animation: none;
+  opacity: 0;
+}
+
+/* a coin, flipped up out of the milk */
+.coinFlip {
+  --dx: calc(var(--x) * 43cqw);
+  --dy: calc(var(--y) * 43cqw);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12cqw;
+  height: 12cqw;
+  margin: -6cqw 0 0 -6cqw;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 38% 32%, #ffffff 0%, #e2e8f0 55%, #8f9bab 100%);
+  box-shadow:
+    inset 0 0 0 0.8cqw rgba(163, 174, 189, 0.9),
+    0 0 3cqw rgba(255, 255, 255, 0.6);
+  animation: coinUp 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* a twinkle and a gold "ping" on the ring once it is uncovered, so the guest spots it */
+.glint {
+  --dx: calc(var(--x) * 43cqw);
+  --dy: calc(var(--y) * 43cqw);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  transform: translate(var(--dx), var(--dy));
+}
+
+.glint::before {
+  content: "";
+  position: absolute;
+  left: -12cqw;
+  top: -15cqw;
+  width: 24cqw;
+  height: 24cqw;
+  background:
+    radial-gradient(circle, #ffffff 0 6%, rgba(255, 214, 110, 0.85) 13%, rgba(255, 196, 70, 0.3) 26%, rgba(255, 196, 70, 0) 46%),
+    linear-gradient(rgba(255, 210, 100, 0) 46.5%, #fff6d6 50%, rgba(255, 210, 100, 0) 53.5%),
+    linear-gradient(90deg, rgba(255, 210, 100, 0) 46.5%, #fff6d6 50%, rgba(255, 210, 100, 0) 53.5%);
+  -webkit-mask-image: radial-gradient(circle, #000 16%, transparent 60%);
+  mask-image: radial-gradient(circle, #000 16%, transparent 60%);
+  animation: glint 1.4s ease-in-out infinite;
+}
+
+.glint::after {
+  content: "";
+  position: absolute;
+  left: -8cqw;
+  top: -8cqw;
+  width: 16cqw;
+  height: 16cqw;
+  border-radius: 50%;
+  border: 0.7cqw solid rgba(201, 145, 40, 0.9);
+  box-shadow: 0 0 2cqw rgba(255, 200, 80, 0.6);
+  animation: ping 1.4s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+}
+
+/* ---------- the ring rises out of the milk ---------- */
+.win {
+  --dx: calc(var(--x) * 43cqw);
+  --dy: calc(var(--y) * 43cqw);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* golden rays turning slowly behind the ring */
+.rays {
+  position: absolute;
+  left: -42cqw;
+  top: -45cqw;
+  width: 84cqw;
+  height: 84cqw;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 236, 170, 0.6) 0deg 5deg, rgba(255, 236, 170, 0) 5deg 20deg);
+  -webkit-mask-image: radial-gradient(circle, #000 8%, transparent 66%);
+  mask-image: radial-gradient(circle, #000 8%, transparent 66%);
+  opacity: 0;
+  animation:
+    raysIn 1.4s ease-out 0.5s both,
+    raysTurn 26s linear 0.5s infinite;
+}
+
+.halo {
+  position: absolute;
+  left: -32cqw;
+  top: -32cqw;
+  width: 64cqw;
+  height: 64cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 238, 176, 0.9) 0%, rgba(255, 214, 120, 0.38) 34%, rgba(255, 214, 120, 0) 68%);
+  animation:
+    haloIn 1.5s cubic-bezier(0.2, 0.9, 0.25, 1) both,
+    haloPulse 2.4s ease-in-out 1.5s infinite alternate;
+}
+
+.ringImg {
+  position: absolute;
+  left: -13cqw;
+  top: -13cqw;
+  width: 26cqw;
+  height: 26cqw;
+  display: grid;
+  place-items: center;
+  font-size: 10cqw;
+  animation:
+    ringRise 1.5s cubic-bezier(0.2, 0.9, 0.25, 1) both,
+    ringFloat 2.8s ease-in-out 1.5s infinite alternate;
+}
+
+.spark {
+  position: absolute;
+  left: -1.2cqw;
+  top: -4.2cqw;
+  width: 2.4cqw;
+  height: 2.4cqw;
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, #fffbe6 0%, #f6cf6a 50%, rgba(246, 207, 106, 0) 75%);
+  animation: spark 1.2s ease-out both;
+  animation-delay: calc(0.75s + var(--d));
+}
+
+/* ---------- status & buttons ---------- */
+.after {
+  min-height: 118px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: clamp(16px, 3.2svh, 28px);
+}
+
+.status {
+  min-height: 2.7em;
+  max-width: 32ch;
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-size: clamp(16px, 4.3vw, 19px);
+  line-height: 1.35;
+  color: var(--soft);
+  text-wrap: balance;
+}
+
+.showBtn {
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-size: clamp(15px, 4vw, 17px);
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: rgba(242, 201, 107, 0.5);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.winTitle {
+  font-family: var(--font-script), cursive;
+  font-size: clamp(36px, 9.5vw, 48px);
+  line-height: 1.1;
+  color: #f6dc8a;
+  animation: fadeUp 0.8s ease 0.5s both;
+}
+
+.winSub {
+  max-width: 32ch;
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-size: clamp(16px, 4.2vw, 19px);
+  line-height: 1.35;
+  color: var(--soft);
+  text-wrap: balance;
+  animation: fadeUp 0.8s ease 0.75s both;
+}
+
+.again {
+  margin-top: 8px;
+  padding: 11px 24px 11px calc(24px + 0.24em);
+  border: 1px solid rgba(242, 201, 107, 0.75);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(242, 201, 107, 0.2), rgba(242, 201, 107, 0.06));
+  font-family: var(--font-cinzel), serif;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+  animation: fadeUp 0.8s ease 1s both;
+}
+
+.showBtn:focus-visible,
+.again:focus-visible {
+  outline: 2px solid #f6dc8a;
+  outline-offset: 3px;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes sheenDrift {
+  from {
+    transform: rotate(-32deg) translate(0, 0) scale(1);
+    opacity: 0.75;
+  }
+  to {
+    transform: rotate(-28deg) translate(6%, 10%) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes swirlHint {
+  0% {
+    transform: translate(-24cqw, 10cqw) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  45% {
+    transform: translate(16cqw, -14cqw) scale(1);
+  }
+  70% {
+    transform: translate(20cqw, 12cqw) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-6cqw, 20cqw) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes coinUp {
+  0% {
+    transform: translate(var(--dx), var(--dy)) rotateY(0deg) scale(0.9);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), calc(var(--dy) - 24cqw)) rotateY(720deg) scale(1.25);
+    opacity: 0;
+  }
+}
+
+@keyframes glint {
+  0%,
+  100% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes ping {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes raysIn {
+  from {
+    scale: 0.3;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+@keyframes raysTurn {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes haloIn {
+  from {
+    transform: translate(var(--dx), var(--dy)) scale(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: translate(0, -3cqw) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes haloPulse {
+  from {
+    transform: translate(0, -3cqw) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(0, -3cqw) scale(1.12);
+    opacity: 0.7;
+  }
+}
+
+@keyframes ringRise {
+  0% {
+    transform: translate(var(--dx), var(--dy)) scale(0.42) rotate(0deg);
+  }
+  45% {
+    transform: translate(calc(var(--dx) * 0.35), calc(var(--dy) * 0.35 - 8cqw)) scale(1.5) rotate(-10deg);
+  }
+  100% {
+    transform: translate(0, -3cqw) scale(1.85) rotate(0deg);
+  }
+}
+
+@keyframes ringFloat {
+  from {
+    transform: translate(0, -3cqw) scale(1.85) rotate(0deg);
+  }
+  to {
+    transform: translate(0, -5cqw) scale(1.85) rotate(4deg);
+  }
+}
+
+@keyframes spark {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--sx), var(--sy)) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: opacity 0.6s ease;
+    transform: none;
+  }
+  .sheen::before,
+  .inView .hint,
+  .glint::before,
+  .glint::after,
+  .rays,
+  .halo,
+  .ringImg,
+  .spark,
+  .coinFlip,
+  .winTitle,
+  .winSub,
+  .again {
+    animation-duration: 0.01s !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+  }
+}
