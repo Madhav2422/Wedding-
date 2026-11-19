@@ -18,6 +18,8 @@ type Stage = "closed" | "opening" | "open";
 
 const MUSIC: string = wedding.music;
 const MUSIC_START: number = wedding.musicStart;
+/** Seconds after the tap when the petal shower is created (its first petals fall at 0.9 s). */
+const SHOWER_AFTER = 0.35;
 
 /**
  * The landing experience:
@@ -31,9 +33,13 @@ export default function Invitation() {
   const [stage, setStage] = useState<Stage>("closed");
   const [skipped, setSkipped] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
+  const [shower, setShower] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoPaused = useRef(false);
   const timer = useRef<number | undefined>(undefined);
+  const showerTimer = useRef<number | undefined>(undefined);
+  const begun = useRef(false);
+  const soundStarted = useRef(false);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has("skipIntro")) {
@@ -60,6 +66,7 @@ export default function Invitation() {
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       window.clearTimeout(timer.current);
+      window.clearTimeout(showerTimer.current);
       window.clearTimeout(warm);
       document.removeEventListener("visibilitychange", onVisibility);
     };
@@ -89,9 +96,24 @@ export default function Invitation() {
     if (wedding.chime) prepareAudio();
   }, []);
 
-  const open = useCallback(() => {
-    if (stage !== "closed") return;
+  /**
+   * Finger down on the gate: the seal breaks and the doors start straight away. Everything
+   * else waits a moment (the petal shower is created 350 ms later), so the first frame after
+   * the touch stays light and the doors move instantly — even on slower phones.
+   */
+  const begin = useCallback(() => {
+    if (begun.current) return;
+    begun.current = true;
     setStage("opening");
+    showerTimer.current = window.setTimeout(() => setShower(true), SHOWER_AFTER * 1000);
+    timer.current = window.setTimeout(() => setStage("open"), GATE_TIMING.total * 1000);
+  }, []);
+
+  /** The completed tap: phones only allow sound from a finished tap, so the bell & song start here. */
+  const open = useCallback(() => {
+    begin();
+    if (soundStarted.current) return;
+    soundStarted.current = true;
 
     if (wedding.chime) playTempleBell();
     const audio = prepareMusic(MUSIC, MUSIC_START);
@@ -108,9 +130,7 @@ export default function Invitation() {
           /* no song file yet, or the browser said no — the invitation works without it */
         });
     }
-
-    timer.current = window.setTimeout(() => setStage("open"), GATE_TIMING.total * 1000);
-  }, [stage]);
+  }, [begin]);
 
   return (
     <main>
@@ -130,10 +150,17 @@ export default function Invitation() {
       {wedding.aekiBeki && <AekiBekiSection />}
       <RsvpSection />
 
-      {stage !== "open" && <PalaceGate stage={stage} onOpen={open} onPrepare={prepare} />}
+      {stage !== "open" && <PalaceGate stage={stage} onBegin={begin} onOpen={open} onPrepare={prepare} />}
 
-      {stage !== "closed" && !skipped && (
-        <PetalShower count={48} seed={21} startDelay={0.9} spread={2.4} minDuration={4.5} maxDuration={7.5} />
+      {shower && !skipped && (
+        <PetalShower
+          count={48}
+          seed={21}
+          startDelay={0.9 - SHOWER_AFTER}
+          spread={2.4}
+          minDuration={4.5}
+          maxDuration={7.5}
+        />
       )}
 
       {musicOn && <MusicToggle audioRef={audioRef} />}

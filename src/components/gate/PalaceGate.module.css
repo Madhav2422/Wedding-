@@ -6,6 +6,11 @@
  * JavaScript, so the walk through the arch never stutters. The moment the gate is
  * tapped, the decorative SVG animations (swaying garlands, flickering diyas…) pause,
  * so the whole façade becomes a still image that the GPU simply scales.
+ *
+ * Every opening animation is attached from the start in a PAUSED state, and `.opening`
+ * only switches them to running. Creating many animations at the moment of the tap made
+ * iPhones (Safari/WebKit) freeze for a moment before the doors moved; pressing "play" on
+ * animations that already exist costs almost nothing.
  */
 
 /* ---------- scene ---------- */
@@ -50,13 +55,21 @@
   inset: 0;
   transform-origin: 50% 60%;
   will-change: transform, opacity;
-}
-
-.opening .zoom {
+  /*
+   * 99.9% (not 100%) on purpose: the first time a layer holding the 3D doors turns even
+   * slightly see-through, iPhones (WebKit) switch how they draw it — a one-off hitch, which
+   * used to land mid-walk when the fade-out began. Starting just below 1 pays it at load.
+   */
+  opacity: 0.999;
   animation:
     walkIn var(--zoom-duration) linear var(--zoom-delay) both,
     fadeOut calc(var(--zoom-duration) * 0.42) cubic-bezier(0.4, 0, 0.6, 1)
       calc(var(--zoom-delay) + var(--zoom-duration) * 0.5) both;
+  animation-play-state: paused;
+}
+
+.opening .zoom {
+  animation-play-state: running;
 }
 
 .frame {
@@ -91,18 +104,17 @@
 
 .doorLeft {
   transform-origin: 0% 50%;
+  animation: doorLeft var(--doors-duration) var(--doors-delay) both paused;
 }
 
 .doorRight {
   transform-origin: 100% 50%;
+  animation: doorRight var(--doors-duration) var(--doors-delay) both paused;
 }
 
-.opening .doorLeft {
-  animation: doorLeft var(--doors-duration) var(--doors-delay) both;
-}
-
+.opening .doorLeft,
 .opening .doorRight {
-  animation: doorRight var(--doors-duration) var(--doors-delay) both;
+  animation-play-state: running;
 }
 
 .shade {
@@ -110,10 +122,11 @@
   inset: 0;
   opacity: 0;
   pointer-events: none;
+  animation: shade 2.6s ease-in calc(var(--doors-delay) + 0.45s) both paused;
 }
 
 .opening .shade {
-  animation: shade 2.6s ease-in calc(var(--doors-delay) + 0.45s) both;
+  animation-play-state: running;
 }
 
 .backing,
@@ -124,10 +137,11 @@
 
 .backing {
   background: #1c0307;
+  animation: fadeOut 0.3s ease var(--doors-delay) both paused;
 }
 
 .opening .backing {
-  animation: fadeOut 0.3s ease var(--doors-delay) both;
+  animation-play-state: running;
 }
 
 .innerGlow {
@@ -139,10 +153,11 @@
     rgba(255, 216, 150, 0.92) 55%,
     rgba(255, 196, 120, 0) 82%
   );
+  animation: innerGlow 3.9s ease-in-out 0.4s both paused;
 }
 
 .opening .innerGlow {
-  animation: innerGlow 3.9s ease-in-out 0.4s both;
+  animation-play-state: running;
 }
 
 /* ---------- light rays ---------- */
@@ -156,17 +171,31 @@
   pointer-events: none;
 }
 
+/*
+ * Soft beams of light fanning out of the doorway: one CSS gradient (a third of the old SVG's
+ * area). The big SVG version made iPhones stall for a moment when it appeared.
+ */
 .rays {
   position: absolute;
-  left: -130cqh;
-  top: -130cqh;
-  width: 260cqh;
-  height: 260cqh;
+  left: -75cqh;
+  top: -75cqh;
+  width: 150cqh;
+  height: 150cqh;
+  border-radius: 50%;
   opacity: 0;
+  background: repeating-conic-gradient(
+    from -2deg,
+    rgba(255, 250, 236, 0.95) 0deg 4deg,
+    rgba(255, 240, 205, 0.3) 4deg 7deg,
+    rgba(255, 240, 205, 0) 7deg 15deg
+  );
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 0%, rgba(0, 0, 0, 0.55) 30%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 0%, rgba(0, 0, 0, 0.55) 30%, transparent 100%);
+  animation: rays 3.4s ease-out 0.8s both paused;
 }
 
 .opening .rays {
-  animation: rays 3.4s ease-out 0.8s both;
+  animation-play-state: running;
 }
 
 /* ---------- seal ---------- */
@@ -182,15 +211,32 @@
 .seal {
   position: absolute;
   inset: 0;
-  filter: drop-shadow(0 6px 10px rgba(30, 2, 8, 0.55));
   animation: sealIn 1.1s cubic-bezier(0.22, 0.9, 0.3, 1) 1.2s both;
 }
 
-.opening .seal {
-  animation: sealBreak 0.6s cubic-bezier(0.5, 0, 0.75, 0) both;
+/* the seal breaking — attached paused, played by the tap */
+.sealPop {
+  position: absolute;
+  inset: 0;
+  animation: sealBreak 0.6s cubic-bezier(0.5, 0, 0.75, 0) both paused;
+}
+
+.opening .sealPop {
+  animation-play-state: running;
+}
+
+/* soft shadow under the wax — a painted glow, because a CSS filter is slow to animate on phones */
+.sealPop::before {
+  content: "";
+  position: absolute;
+  inset: 6% 4% -2%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(30, 2, 8, 0.5), rgba(30, 2, 8, 0.22) 62%, rgba(30, 2, 8, 0));
+  transform: translateY(5%) scale(1.06);
 }
 
 .sealInner {
+  position: relative;
   width: 100%;
   height: 100%;
   animation: breathe 3.2s ease-in-out infinite;
@@ -207,8 +253,13 @@
   animation: ripple 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) 2.2s infinite;
 }
 
+/*
+ * Hidden AND paused: a hidden animation that keeps running can't go to the GPU, so Chrome
+ * (Android) would tick it on the main thread every frame of the walk-in.
+ */
 .opening .ripple {
-  display: none;
+  visibility: hidden;
+  animation-play-state: paused;
 }
 
 .spark {
@@ -223,10 +274,11 @@
   box-shadow: 0 0 10px 2px rgba(255, 214, 120, 0.8);
   pointer-events: none;
   opacity: 0;
+  animation: spark 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d) both paused;
 }
 
 .opening .spark {
-  animation: spark 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d) both;
+  animation-play-state: running;
 }
 
 /* ---------- hint ---------- */
@@ -237,6 +289,11 @@
   transform: translate(-50%, -50%);
   z-index: 6;
   pointer-events: none;
+  animation: fadeOut 0.3s ease both paused;
+}
+
+.opening .hintWrap {
+  animation-play-state: running;
 }
 
 .hint {
@@ -259,10 +316,6 @@
   animation: hintIn 1s ease 2s both;
 }
 
-.opening .hint {
-  animation: fadeOut 0.3s ease both;
-}
-
 .hintText {
   animation: hintPulse 2.4s ease-in-out infinite;
 }
@@ -283,10 +336,11 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  animation: fadeOut 1.2s ease 2.4s both paused;
 }
 
 .opening .overlays {
-  animation: fadeOut 1.2s ease 2.4s both;
+  animation-play-state: running;
 }
 
 .vignette {
@@ -368,12 +422,16 @@
   }
 }
 
+/* starts invisible, so it can wait (paused) at its first frame until the tap */
 @keyframes spark {
-  from {
-    opacity: 1;
+  0% {
+    opacity: 0;
     transform: translate(0, 0) scale(var(--s));
   }
-  to {
+  1% {
+    opacity: 1;
+  }
+  100% {
     opacity: 0;
     transform: translate(var(--x), var(--y)) scale(calc(var(--s) * 0.3));
   }
@@ -642,14 +700,14 @@
     animation: none;
   }
 
-  .opening .zoom {
-    animation: fadeOut 1s ease 0.6s both;
+  .zoom {
+    animation: fadeOut 1s ease 0.6s both paused;
   }
 
-  .opening .doorLeft,
-  .opening .doorRight,
-  .opening .rays,
-  .opening .spark {
+  .doorLeft,
+  .doorRight,
+  .rays,
+  .spark {
     animation: none;
   }
 

@@ -66,8 +66,13 @@
   display: grid;
   place-items: center;
   padding: clamp(84px, 12svh, 128px) 20px clamp(44px, 7svh, 76px);
-  transform: scale(0.86);
   transform-origin: 50% 50%;
+  /*
+   * Attached (paused) from the start and only played when the gates open: creating
+   * animations at the moment of the tap made iPhones hesitate before the doors moved.
+   * While paused in its delay it holds its first frame (scale 0.86).
+   */
+  animation: approach var(--approach, 2.4s) cubic-bezier(0.45, 0, 0.25, 1) var(--base, 0s) backwards paused;
 }
 
 .hero:not(.settled) .scaler {
@@ -75,8 +80,7 @@
 }
 
 .revealed .scaler {
-  transform: none;
-  animation: approach var(--approach, 2.4s) cubic-bezier(0.45, 0, 0.25, 1) var(--base, 0s) backwards;
+  animation-play-state: running;
 }
 
 .mandalaWrap {
@@ -145,12 +149,12 @@
   position: absolute;
   top: 4px;
   translate: -50% 0;
-  transform: translateY(calc(-100% - 60px));
+  /* paused until the gates open; its first frame keeps the strings hidden above the page */
+  animation: drop 1.6s cubic-bezier(0.3, 1.45, 0.5, 1) calc(var(--base, 0s) + 1.3s + var(--t) * 0.5s) backwards paused;
 }
 
 .revealed .ladiWrap {
-  transform: none;
-  animation: drop 1.6s cubic-bezier(0.3, 1.45, 0.5, 1) calc(var(--base, 0s) + 1.3s + var(--t) * 0.5s) backwards;
+  animation-play-state: running;
 }
 
 .ladi {
@@ -180,18 +184,19 @@
   gap: clamp(8px, 1.8svh, 18px);
 }
 
-/* staggered entrance */
+/* staggered entrance — attached paused, played when the gates open */
 .item {
   opacity: 0;
+  animation: fadeUp 1.1s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--base, 0s) + 0.8s + var(--i) * 0.15s) both paused;
+}
+
+.nameIn {
+  animation-name: nameIn;
+  animation-duration: 1.7s;
 }
 
 .revealed .item {
-  animation: fadeUp 1.1s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--base, 0s) + 0.8s + var(--i) * 0.15s) both;
-}
-
-.revealed .nameIn {
-  animation-name: nameIn;
-  animation-duration: 1.7s;
+  animation-play-state: running;
 }
 
 .invocation {
@@ -419,7 +424,7 @@
     animation: none;
   }
 
-  .revealed .item {
+  .item {
     animation-name: fadeIn;
   }
 

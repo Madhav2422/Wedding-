@@ -1,13 +1,12 @@
 "use client";
 
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
 import { seeded } from "@/lib/random";
 import { n } from "@/lib/svg";
 import GoldDust from "../effects/GoldDust";
 import DoorArt, { DoorShade } from "./DoorArt";
 import GateFrame from "./GateFrame";
 import { LAYOUT } from "./geometry";
-import Rays from "./Rays";
 import SealArt from "./SealArt";
 import s from "./PalaceGate.module.css";
 
@@ -65,13 +64,25 @@ const doorwayBox: CSSProperties = {
 
 type Props = {
   stage: GateStage;
+  /**
+   * Finger down on the gate: the seal breaks and the doors start moving at once, so the
+   * gate answers the instant it is touched (phones only allow sound on the completed tap).
+   */
+  onBegin: () => void;
+  /** The completed tap (or Enter / Space): starts the sound too. */
   onOpen: () => void;
-  /** Called on finger-down, just before the tap, to warm up anything slow (audio). */
+  /** Called on finger-down to warm up anything slow (audio). */
   onPrepare?: () => void;
 };
 
-export default function PalaceGate({ stage, onOpen, onPrepare }: Props) {
+export default function PalaceGate({ stage, onBegin, onOpen, onPrepare }: Props) {
   const opening = stage === "opening";
+
+  const onDown = (e: PointerEvent) => {
+    if (e.button !== 0) return; // not on right-clicks
+    onPrepare?.();
+    onBegin();
+  };
 
   const onKey = (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -88,7 +99,7 @@ export default function PalaceGate({ stage, onOpen, onPrepare }: Props) {
       role="button"
       tabIndex={0}
       aria-label="Tap to open the wedding invitation"
-      onPointerDown={onPrepare}
+      onPointerDown={onDown}
       onClick={onOpen}
       onKeyDown={onKey}
     >
@@ -118,7 +129,7 @@ export default function PalaceGate({ stage, onOpen, onPrepare }: Props) {
 
             {/* light rays */}
             <div className={s.raysWrap}>
-              <Rays className={s.rays} />
+              <div className={s.rays} />
             </div>
 
             {/* wax seal */}
@@ -126,8 +137,10 @@ export default function PalaceGate({ stage, onOpen, onPrepare }: Props) {
               <span className={s.ripple} />
               <span className={s.ripple} style={{ animationDelay: "3.4s" }} />
               <div className={s.seal}>
-                <div className={s.sealInner}>
-                  <SealArt />
+                <div className={s.sealPop}>
+                  <div className={s.sealInner}>
+                    <SealArt />
+                  </div>
                 </div>
               </div>
               {SPARKS.map((style, i) => (
