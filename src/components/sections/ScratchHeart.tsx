@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { weddingDate } from "@/config/wedding";
 import { idle, whenIdle } from "@/lib/idle";
+import { observeWidth } from "@/lib/observeWidth";
 import { seeded } from "@/lib/random";
 import { n } from "@/lib/svg";
 import s from "./Scratch.module.css";
@@ -214,14 +215,12 @@ export default function ScratchHeart({ revealed, onReveal }: Props) {
       { rootMargin: "100% 0px" },
     );
     io.observe(wrap);
-    const ro = new ResizeObserver(([entry]) => {
-      const w = entry.contentRect.width;
+    const stopWatching = observeWidth(wrap, (w) => {
       if (st.current.width && !st.current.done && Math.abs(w - st.current.width) > 2) paint();
     });
-    ro.observe(wrap);
     return () => {
       io.disconnect();
-      ro.disconnect();
+      stopWatching();
       cancelIdle?.();
     };
   }, [paint]);
@@ -377,6 +376,7 @@ let probe: HTMLCanvasElement | null = null;
  * every pixel of the full-size canvas froze phones for a moment right as the page scrolled in.
  */
 function countOpaque(canvas: HTMLCanvasElement) {
+  if (!canvas.width || !canvas.height) return 0; // not laid out yet
   const w = Math.max(1, Math.round(canvas.width / SAMPLE));
   const h = Math.max(1, Math.round(canvas.height / SAMPLE));
   probe ??= document.createElement("canvas");

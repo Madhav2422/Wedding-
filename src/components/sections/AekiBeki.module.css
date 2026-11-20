@@ -8,7 +8,6 @@
   --soft: rgba(251, 233, 196, 0.8);
   --accent: #f2c96b;
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   place-items: center;
@@ -20,6 +19,14 @@
   scroll-snap-align: start;
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .section {
+    min-height: 100vh;
+    padding: clamp(60px, 9vh, 96px) 16px clamp(52px, 8vh, 88px);
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 /* faint peacock feathers woven into the background */
@@ -64,6 +71,19 @@
   background: radial-gradient(circle, rgba(242, 201, 107, 0.24) 0%, rgba(242, 201, 107, 0.07) 40%, rgba(242, 201, 107, 0) 66%);
 }
 
+/* Older phone browsers (before Chrome 104 / iOS 14.1) ignore `translate:` — same position the old way. */
+@supports not (translate: 0) {
+  .glow {
+    transform: translate(-50%, -50%);
+  }
+}
+
+@supports not (aspect-ratio: 1) {
+  .glow {
+    height: min(140vw, 900px);
+  }
+}
+
 /* ---------- heading ---------- */
 .content {
   position: relative;
@@ -73,6 +93,12 @@
   align-items: center;
   text-align: center;
   gap: clamp(4px, 1.1svh, 10px);
+}
+
+@supports not (height: 1svh) {
+  .content {
+    gap: clamp(4px, 1.1vh, 10px);
+  }
 }
 
 .reveal {
@@ -139,6 +165,12 @@
   margin-top: clamp(10px, 2.2svh, 22px);
 }
 
+@supports not (height: 1svh) {
+  .stage {
+    margin-top: clamp(10px, 2.2vh, 22px);
+  }
+}
+
 .bowl {
   position: relative;
   width: min(84vw, 44svh, 420px);
@@ -147,6 +179,19 @@
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+@supports not (height: 1svh) {
+  .bowl {
+    width: min(84vw, 44vh, 420px);
+  }
+}
+
+/* Browsers before Chrome 88 / iOS 15 ignore `aspect-ratio`: give the box its height directly. */
+@supports not (aspect-ratio: 1) {
+  .bowl {
+    height: min(84vw, 44vh, 420px);
+  }
 }
 
 .bowlShadow {
@@ -217,6 +262,14 @@
   background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 16%, rgba(255, 240, 200, 0.5) 38%, rgba(255, 240, 200, 0) 70%);
 }
 
+@supports not (width: 1cqw) {
+  .hint {
+    width: calc(16 * min(84vw, 44vh, 420px) / 100);
+    height: calc(16 * min(84vw, 44vh, 420px) / 100);
+    margin: calc(-8 * min(84vw, 44vh, 420px) / 100) 0 0 calc(-8 * min(84vw, 44vh, 420px) / 100);
+  }
+}
+
 .inView .hint {
   animation: swirlHint 3.6s ease-in-out 1.6s infinite;
 }
@@ -246,6 +299,19 @@
   animation: coinUp 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
+@supports not (width: 1cqw) {
+  .coinFlip {
+    --dx: calc(var(--x) * calc(43 * min(84vw, 44vh, 420px) / 100));
+    --dy: calc(var(--y) * calc(43 * min(84vw, 44vh, 420px) / 100));
+    width: calc(12 * min(84vw, 44vh, 420px) / 100);
+    height: calc(12 * min(84vw, 44vh, 420px) / 100);
+    margin: calc(-6 * min(84vw, 44vh, 420px) / 100) 0 0 calc(-6 * min(84vw, 44vh, 420px) / 100);
+    box-shadow:
+      inset 0 0 0 calc(0.8 * min(84vw, 44vh, 420px) / 100) rgba(163, 174, 189, 0.9),
+      0 0 calc(3 * min(84vw, 44vh, 420px) / 100) rgba(255, 255, 255, 0.6);
+  }
+}
+
 /* a twinkle and a gold "ping" on the ring once it is uncovered, so the guest spots it */
 .glint {
   --dx: calc(var(--x) * 43cqw);
@@ -257,6 +323,13 @@
   height: 0;
   pointer-events: none;
   transform: translate(var(--dx), var(--dy));
+}
+
+@supports not (width: 1cqw) {
+  .glint {
+    --dx: calc(var(--x) * calc(43 * min(84vw, 44vh, 420px) / 100));
+    --dy: calc(var(--y) * calc(43 * min(84vw, 44vh, 420px) / 100));
+  }
 }
 
 .glint::before {
@@ -275,6 +348,15 @@
   animation: glint 1.4s ease-in-out infinite;
 }
 
+@supports not (width: 1cqw) {
+  .glint::before {
+    left: calc(-12 * min(84vw, 44vh, 420px) / 100);
+    top: calc(-15 * min(84vw, 44vh, 420px) / 100);
+    width: calc(24 * min(84vw, 44vh, 420px) / 100);
+    height: calc(24 * min(84vw, 44vh, 420px) / 100);
+  }
+}
+
 .glint::after {
   content: "";
   position: absolute;
@@ -288,6 +370,17 @@
   animation: ping 1.4s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
 }
 
+@supports not (width: 1cqw) {
+  .glint::after {
+    left: calc(-8 * min(84vw, 44vh, 420px) / 100);
+    top: calc(-8 * min(84vw, 44vh, 420px) / 100);
+    width: calc(16 * min(84vw, 44vh, 420px) / 100);
+    height: calc(16 * min(84vw, 44vh, 420px) / 100);
+    border: calc(0.7 * min(84vw, 44vh, 420px) / 100) solid rgba(201, 145, 40, 0.9);
+    box-shadow: 0 0 calc(2 * min(84vw, 44vh, 420px) / 100) rgba(255, 200, 80, 0.6);
+  }
+}
+
 /* ---------- the ring rises out of the milk ---------- */
 .win {
   --dx: calc(var(--x) * 43cqw);
@@ -298,6 +391,13 @@
   width: 0;
   height: 0;
   pointer-events: none;
+}
+
+@supports not (width: 1cqw) {
+  .win {
+    --dx: calc(var(--x) * calc(43 * min(84vw, 44vh, 420px) / 100));
+    --dy: calc(var(--y) * calc(43 * min(84vw, 44vh, 420px) / 100));
+  }
 }
 
 /* golden rays turning slowly behind the ring */
@@ -317,6 +417,15 @@
     raysTurn 26s linear 0.5s infinite;
 }
 
+@supports not (width: 1cqw) {
+  .rays {
+    left: calc(-42 * min(84vw, 44vh, 420px) / 100);
+    top: calc(-45 * min(84vw, 44vh, 420px) / 100);
+    width: calc(84 * min(84vw, 44vh, 420px) / 100);
+    height: calc(84 * min(84vw, 44vh, 420px) / 100);
+  }
+}
+
 .halo {
   position: absolute;
   left: -32cqw;
@@ -328,6 +437,15 @@
   animation:
     haloIn 1.5s cubic-bezier(0.2, 0.9, 0.25, 1) both,
     haloPulse 2.4s ease-in-out 1.5s infinite alternate;
+}
+
+@supports not (width: 1cqw) {
+  .halo {
+    left: calc(-32 * min(84vw, 44vh, 420px) / 100);
+    top: calc(-32 * min(84vw, 44vh, 420px) / 100);
+    width: calc(64 * min(84vw, 44vh, 420px) / 100);
+    height: calc(64 * min(84vw, 44vh, 420px) / 100);
+  }
 }
 
 .ringImg {
@@ -344,6 +462,16 @@
     ringFloat 2.8s ease-in-out 1.5s infinite alternate;
 }
 
+@supports not (width: 1cqw) {
+  .ringImg {
+    left: calc(-13 * min(84vw, 44vh, 420px) / 100);
+    top: calc(-13 * min(84vw, 44vh, 420px) / 100);
+    width: calc(26 * min(84vw, 44vh, 420px) / 100);
+    height: calc(26 * min(84vw, 44vh, 420px) / 100);
+    font-size: calc(10 * min(84vw, 44vh, 420px) / 100);
+  }
+}
+
 .spark {
   position: absolute;
   left: -1.2cqw;
@@ -357,6 +485,15 @@
   animation-delay: calc(0.75s + var(--d));
 }
 
+@supports not (width: 1cqw) {
+  .spark {
+    left: calc(-1.2 * min(84vw, 44vh, 420px) / 100);
+    top: calc(-4.2 * min(84vw, 44vh, 420px) / 100);
+    width: calc(2.4 * min(84vw, 44vh, 420px) / 100);
+    height: calc(2.4 * min(84vw, 44vh, 420px) / 100);
+  }
+}
+
 /* ---------- status & buttons ---------- */
 .after {
   min-height: 118px;
@@ -365,6 +502,12 @@
   align-items: center;
   gap: 6px;
   margin-top: clamp(16px, 3.2svh, 28px);
+}
+
+@supports not (height: 1svh) {
+  .after {
+    margin-top: clamp(16px, 3.2vh, 28px);
+  }
 }
 
 .status {
@@ -465,6 +608,29 @@
   }
 }
 
+@supports not (width: 1cqw) {
+  @keyframes swirlHint {
+    0% {
+      transform: translate(calc(-24 * min(84vw, 44vh, 420px) / 100), calc(10 * min(84vw, 44vh, 420px) / 100)) scale(0.6);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    45% {
+      transform: translate(calc(16 * min(84vw, 44vh, 420px) / 100), calc(-14 * min(84vw, 44vh, 420px) / 100)) scale(1);
+    }
+    70% {
+      transform: translate(calc(20 * min(84vw, 44vh, 420px) / 100), calc(12 * min(84vw, 44vh, 420px) / 100)) scale(0.95);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(calc(-6 * min(84vw, 44vh, 420px) / 100), calc(20 * min(84vw, 44vh, 420px) / 100)) scale(0.6);
+      opacity: 0;
+    }
+  }
+}
+
 @keyframes coinUp {
   0% {
     transform: translate(var(--dx), var(--dy)) rotateY(0deg) scale(0.9);
@@ -476,6 +642,22 @@
   100% {
     transform: translate(var(--dx), calc(var(--dy) - 24cqw)) rotateY(720deg) scale(1.25);
     opacity: 0;
+  }
+}
+
+@supports not (width: 1cqw) {
+  @keyframes coinUp {
+    0% {
+      transform: translate(var(--dx), var(--dy)) rotateY(0deg) scale(0.9);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--dx), calc(var(--dy) - calc(24 * min(84vw, 44vh, 420px) / 100))) rotateY(720deg) scale(1.25);
+      opacity: 0;
+    }
   }
 }
 
@@ -530,6 +712,19 @@
   }
 }
 
+@supports not (width: 1cqw) {
+  @keyframes haloIn {
+    from {
+      transform: translate(var(--dx), var(--dy)) scale(0.2);
+      opacity: 0;
+    }
+    to {
+      transform: translate(0, calc(-3 * min(84vw, 44vh, 420px) / 100)) scale(1);
+      opacity: 1;
+    }
+  }
+}
+
 @keyframes haloPulse {
   from {
     transform: translate(0, -3cqw) scale(1);
@@ -538,6 +733,19 @@
   to {
     transform: translate(0, -3cqw) scale(1.12);
     opacity: 0.7;
+  }
+}
+
+@supports not (width: 1cqw) {
+  @keyframes haloPulse {
+    from {
+      transform: translate(0, calc(-3 * min(84vw, 44vh, 420px) / 100)) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translate(0, calc(-3 * min(84vw, 44vh, 420px) / 100)) scale(1.12);
+      opacity: 0.7;
+    }
   }
 }
 
@@ -553,12 +761,37 @@
   }
 }
 
+@supports not (width: 1cqw) {
+  @keyframes ringRise {
+    0% {
+      transform: translate(var(--dx), var(--dy)) scale(0.42) rotate(0deg);
+    }
+    45% {
+      transform: translate(calc(var(--dx) * 0.35), calc(var(--dy) * 0.35 - calc(8 * min(84vw, 44vh, 420px) / 100))) scale(1.5) rotate(-10deg);
+    }
+    100% {
+      transform: translate(0, calc(-3 * min(84vw, 44vh, 420px) / 100)) scale(1.85) rotate(0deg);
+    }
+  }
+}
+
 @keyframes ringFloat {
   from {
     transform: translate(0, -3cqw) scale(1.85) rotate(0deg);
   }
   to {
     transform: translate(0, -5cqw) scale(1.85) rotate(4deg);
+  }
+}
+
+@supports not (width: 1cqw) {
+  @keyframes ringFloat {
+    from {
+      transform: translate(0, calc(-3 * min(84vw, 44vh, 420px) / 100)) scale(1.85) rotate(0deg);
+    }
+    to {
+      transform: translate(0, calc(-5 * min(84vw, 44vh, 420px) / 100)) scale(1.85) rotate(4deg);
+    }
   }
 }
 

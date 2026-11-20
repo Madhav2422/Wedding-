@@ -1,3 +1,13 @@
+/*
+ * Older phone browsers: many Android phones open links in a browser built on an old engine,
+ * and guests may have older iPhones. So `package.json` → "browserslist" makes the build
+ * work there too, and any rule using a newer CSS feature is followed by an `@supports not …`
+ * block that only those browsers read, with the same thing in terms they understand:
+ *   `@supports not (height: 1svh)`  → `vh` instead of `svh`
+ *   `@supports not (width: 1cqw)`   → container sizes worked out from the screen
+ *   `@supports not (translate: 0)`  → `transform` / margins instead of `translate:`
+ * (Fallback lines inside the rule itself don't survive: the CSS minifier merges them away.)
+ */
 :root {
   --maroon: #6a0f22;
   --ink: #4a2e24;
@@ -23,7 +33,6 @@ html {
 }
 
 body {
-  min-height: 100vh;
   min-height: 100svh;
   background: #f6e7cb;
   color: var(--ink);
@@ -31,6 +40,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
+}
+
+@supports not (height: 1svh) {
+  body {
+    min-height: 100vh;
+  }
 }
 
 /* Each section is a "page": scrolling glides and gently settles on the next one. */

@@ -31,6 +31,15 @@
   cursor: default;
 }
 
+/*
+ * `html.gate-go` = the gate was tapped before the page's JavaScript was ready (early-tap
+ * script in app/layout.tsx); it starts exactly the same animations as `.opening`.
+ * `html.gate-gone` = that JavaScript never arrived: the script removes the gate itself.
+ */
+:global(html.gate-gone) .scene {
+  display: none;
+}
+
 .stage {
   position: absolute;
   inset: 0;
@@ -41,12 +50,17 @@
 /* The 800×1400 drawing, scaled to fit the screen (phones first). */
 .gateBox {
   position: relative;
-  height: min(90vh, 175vw);
   height: min(90svh, 175vw);
-  width: calc(min(90vh, 175vw) * 0.5714286);
   width: calc(min(90svh, 175vw) * 0.5714286);
   container-type: size;
   animation: gateIntro 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@supports not (height: 1svh) {
+  .gateBox {
+    height: min(90vh, 175vw);
+    width: calc(min(90vh, 175vw) * 0.5714286);
+  }
 }
 
 /* The camera: scales the whole palace towards the doorway. */
@@ -68,7 +82,8 @@
   animation-play-state: paused;
 }
 
-.opening .zoom {
+.opening .zoom,
+:global(html.gate-go) .zoom {
   animation-play-state: running;
 }
 
@@ -89,6 +104,17 @@
   z-index: 2;
   perspective: 130cqh;
   perspective-origin: 50% 60%;
+}
+
+/*
+ * Sizes in `cqh`/`cqw` are relative to .gateBox. Older phone browsers (before Chrome 105 /
+ * iOS 16) don't know those units, so they get the same sizes worked out from the screen:
+ * .gateBox is min(90vh, 175vw) tall and 0.5714286 times that wide.
+ */
+@supports not (width: 1cqw) {
+  .doorway {
+    perspective: calc(130 * min(90vh, 175vw) / 100);
+  }
 }
 
 .door {
@@ -113,19 +139,28 @@
 }
 
 .opening .doorLeft,
-.opening .doorRight {
+.opening .doorRight,
+:global(html.gate-go) .doorLeft,
+:global(html.gate-go) .doorRight {
   animation-play-state: running;
 }
 
+/*
+ * Darkens the door as it turns away from the light. A plain rectangle of one colour on
+ * purpose: the GPU just fills it, with nothing to paint (an SVG silhouette had to be painted
+ * at the walk-in's zoom on every phone). The palace frame covers its corners outside the arch.
+ */
 .shade {
   position: absolute;
   inset: 0;
+  background: #0b0204;
   opacity: 0;
   pointer-events: none;
   animation: shade 2.6s ease-in calc(var(--doors-delay) + 0.45s) both paused;
 }
 
-.opening .shade {
+.opening .shade,
+:global(html.gate-go) .shade {
   animation-play-state: running;
 }
 
@@ -140,7 +175,8 @@
   animation: fadeOut 0.3s ease var(--doors-delay) both paused;
 }
 
-.opening .backing {
+.opening .backing,
+:global(html.gate-go) .backing {
   animation-play-state: running;
 }
 
@@ -156,7 +192,8 @@
   animation: innerGlow 3.9s ease-in-out 0.4s both paused;
 }
 
-.opening .innerGlow {
+.opening .innerGlow,
+:global(html.gate-go) .innerGlow {
   animation-play-state: running;
 }
 
@@ -181,8 +218,19 @@
   top: -75cqh;
   width: 150cqh;
   height: 150cqh;
-  border-radius: 50%;
   opacity: 0;
+  animation: rays 3.4s ease-out 0.8s both paused;
+}
+
+/*
+ * The beams themselves. The soft round edge (a mask) is on this still inner element, so it
+ * is painted into the picture once; on the turning element itself the GPU would have to
+ * apply the mask again on every frame.
+ */
+.raysArt {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
   background: repeating-conic-gradient(
     from -2deg,
     rgba(255, 250, 236, 0.95) 0deg 4deg,
@@ -191,10 +239,19 @@
   );
   -webkit-mask-image: radial-gradient(circle closest-side, #000 0%, rgba(0, 0, 0, 0.55) 30%, transparent 100%);
   mask-image: radial-gradient(circle closest-side, #000 0%, rgba(0, 0, 0, 0.55) 30%, transparent 100%);
-  animation: rays 3.4s ease-out 0.8s both paused;
 }
 
-.opening .rays {
+@supports not (width: 1cqw) {
+  .rays {
+    left: calc(-75 * min(90vh, 175vw) / 100);
+    top: calc(-75 * min(90vh, 175vw) / 100);
+    width: calc(150 * min(90vh, 175vw) / 100);
+    height: calc(150 * min(90vh, 175vw) / 100);
+  }
+}
+
+.opening .rays,
+:global(html.gate-go) .rays {
   animation-play-state: running;
 }
 
@@ -203,7 +260,7 @@
   position: absolute;
   left: 50%;
   width: 24%;
-  aspect-ratio: 1;
+  height: 13.7142857%; /* = 24% of the width: a circle (no aspect-ratio, for older browsers) */
   transform: translate(-50%, -50%);
   z-index: 5;
 }
@@ -221,7 +278,8 @@
   animation: sealBreak 0.6s cubic-bezier(0.5, 0, 0.75, 0) both paused;
 }
 
-.opening .sealPop {
+.opening .sealPop,
+:global(html.gate-go) .sealPop {
   animation-play-state: running;
 }
 
@@ -257,7 +315,8 @@
  * Hidden AND paused: a hidden animation that keeps running can't go to the GPU, so Chrome
  * (Android) would tick it on the main thread every frame of the walk-in.
  */
-.opening .ripple {
+.opening .ripple,
+:global(html.gate-go) .ripple {
   visibility: hidden;
   animation-play-state: paused;
 }
@@ -277,7 +336,8 @@
   animation: spark 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d) both paused;
 }
 
-.opening .spark {
+.opening .spark,
+:global(html.gate-go) .spark {
   animation-play-state: running;
 }
 
@@ -292,7 +352,8 @@
   animation: fadeOut 0.3s ease both paused;
 }
 
-.opening .hintWrap {
+.opening .hintWrap,
+:global(html.gate-go) .hintWrap {
   animation-play-state: running;
 }
 
@@ -316,6 +377,12 @@
   animation: hintIn 1s ease 2s both;
 }
 
+@supports not (width: 1cqw) {
+  .hint {
+    font-size: max(10.5px, calc(2.7 * min(90vh, 175vw) * 0.5714286 / 100));
+  }
+}
+
 .hintText {
   animation: hintPulse 2.4s ease-in-out infinite;
 }
@@ -331,22 +398,24 @@
   outline-offset: 4px;
 }
 
-/* ---------- overlays ---------- */
-.overlays {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  animation: fadeOut 1.2s ease 2.4s both paused;
+/* ---------- dust & vignette ---------- */
+/* gold dust in front of the palace (inside .zoom, so it fades with it — no extra GPU pass) */
+.dust {
+  z-index: 5;
 }
 
-.opening .overlays {
-  animation-play-state: running;
-}
-
+/* darker edges; it fades by itself (a fading group of layers costs the GPU an extra pass) */
 .vignette {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: radial-gradient(ellipse 75% 65% at 50% 55%, rgba(0, 0, 0, 0) 55%, rgba(38, 10, 4, 0.42) 100%);
+  animation: fadeOut 1.2s ease 2.4s both paused;
+}
+
+.opening .vignette,
+:global(html.gate-go) .vignette {
+  animation-play-state: running;
 }
 
 /* Fades in from black on first load (runs even before JavaScript is ready). */
@@ -367,6 +436,12 @@
   animation: flicker 1.7s ease-in-out infinite;
 }
 
+.glow,
+.glowSlow {
+  opacity: 0.89;
+  transform: scale(1.035);
+}
+
 .glow {
   animation: glow 2.8s ease-in-out infinite;
 }
@@ -380,14 +455,31 @@
 }
 
 /* Freeze the ornaments while we walk through, so the façade is a still image. */
-.opening .sway,
 .opening .flame,
-.opening .glow,
-.opening .glowSlow,
 .opening .spin,
 .opening .sealInner,
-.opening .hintText {
+.opening .hintText,
+:global(html.gate-go) .flame,
+:global(html.gate-go) .spin,
+:global(html.gate-go) .sealInner,
+:global(html.gate-go) .hintText {
   animation-play-state: paused;
+}
+
+/*
+ * The glows and the swaying garlands stop altogether instead of pausing. A paused animation
+ * keeps its own GPU layer, and Android's Chrome prepares every such layer at the walk-in's
+ * 5.5× zoom the moment the gate is tapped: these were most of the graphics work at the tap.
+ * Stopped, they become part of the façade picture. Their resting look is the middle of their
+ * motion (garlands hang straight; glows below), so the change can't be seen.
+ */
+.opening .glow,
+.opening .glowSlow,
+.opening .sway,
+:global(html.gate-go) .glow,
+:global(html.gate-go) .glowSlow,
+:global(html.gate-go) .sway {
+  animation: none;
 }
 
 /* ---------- keyframes ---------- */
@@ -686,7 +778,11 @@
   }
 }
 
-/* Visitors who prefer less motion get a calm cross-fade instead of the 3D walk-through. */
+/*
+ * Less motion (the phone's "Remove animations" setting, which many Android users switch on
+ * to make their phone feel faster): the doors still swing open — the heart of the invitation
+ * — but there is no camera flying through the arch; the palace simply fades away instead.
+ */
 @media (prefers-reduced-motion: reduce) {
   .gateBox,
   .sway,
@@ -701,11 +797,9 @@
   }
 
   .zoom {
-    animation: fadeOut 1s ease 0.6s both paused;
+    animation: fadeOut 1.1s ease var(--zoom-delay) both paused;
   }
 
-  .doorLeft,
-  .doorRight,
   .rays,
   .spark {
     animation: none;

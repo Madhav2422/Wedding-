@@ -175,15 +175,3 @@ function DoorArt({ side }: Props) {
 }
 
 export default memo(DoorArt);
-
-/**
- * A dark silhouette of the door laid on top of it. Fading this layer in darkens the
- * door as it turns away from the light, without ever repainting the carved artwork.
- */
-export const DoorShade = memo(function DoorShade({ side, className }: Props & { className?: string }) {
-  return (
-    <svg className={className} viewBox={viewBoxFor(side)} width="100%" height="100%" aria-hidden="true" focusable="false">
-      <path d={DOOR_LEFT} transform={mirrorFor(side)} fill="#0b0204" />
-    </svg>
-  );
-});

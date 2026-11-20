@@ -1,7 +1,6 @@
 /* Page 3 — scratch the golden heart. Every animation here is transform/opacity (GPU). */
 .section {
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   place-items: center;
@@ -13,6 +12,14 @@
   scroll-snap-align: start;
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .section {
+    min-height: 100vh;
+    padding: clamp(70px, 11vh, 110px) 18px clamp(56px, 9vh, 90px);
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 /* palace parapet (kanguras) rising out of the ivory page above */
@@ -38,6 +45,19 @@
   background: radial-gradient(circle, rgba(233, 179, 74, 0.28) 0%, rgba(233, 179, 74, 0.08) 38%, rgba(233, 179, 74, 0) 65%);
 }
 
+/* Older phone browsers (before Chrome 104 / iOS 14.1) ignore `translate:` — same position the old way. */
+@supports not (translate: 0) {
+  .glow {
+    transform: translate(-50%, -50%);
+  }
+}
+
+@supports not (aspect-ratio: 1) {
+  .glow {
+    height: min(130vw, 900px);
+  }
+}
+
 /* ---------- floating hearts ---------- */
 .floaters {
   position: absolute;
@@ -58,6 +78,12 @@
   will-change: transform;
 }
 
+@supports not (aspect-ratio: 1) {
+  .floater {
+    height: var(--size);
+  }
+}
+
 /* ---------- content ---------- */
 .content {
   position: relative;
@@ -67,6 +93,12 @@
   align-items: center;
   text-align: center;
   gap: clamp(6px, 1.4svh, 12px);
+}
+
+@supports not (height: 1svh) {
+  .content {
+    gap: clamp(6px, 1.4vh, 12px);
+  }
 }
 
 .reveal {
@@ -122,6 +154,12 @@
   margin-top: clamp(10px, 2.5svh, 24px);
 }
 
+@supports not (height: 1svh) {
+  .heartArea {
+    margin-top: clamp(10px, 2.5vh, 24px);
+  }
+}
+
 .heartWrap {
   position: relative;
   width: min(80vw, 46svh, 380px);
@@ -129,6 +167,19 @@
   container-type: inline-size;
   -webkit-user-select: none;
   user-select: none;
+}
+
+@supports not (height: 1svh) {
+  .heartWrap {
+    width: min(80vw, 46vh, 380px);
+  }
+}
+
+/* Browsers before Chrome 88 / iOS 15 ignore `aspect-ratio`: give the box its height directly. */
+@supports not (aspect-ratio: 1) {
+  .heartWrap {
+    height: calc(min(80vw, 46vh, 380px) * 0.95);
+  }
 }
 
 .dateHeart {
@@ -162,6 +213,18 @@
   text-align: center;
 }
 
+@supports not (width: 1cqw) {
+  .dateText {
+    gap: calc(1 * min(80vw, 46vh, 380px) / 100);
+  }
+}
+
+@supports not (translate: 0) {
+  .dateText {
+    transform: translate(-50%, -50%);
+  }
+}
+
 .save {
   font-family: var(--font-cinzel), serif;
   font-size: max(9px, 3.3cqw);
@@ -169,6 +232,12 @@
   padding-left: 0.3em;
   text-transform: uppercase;
   color: #9a6b1f;
+}
+
+@supports not (width: 1cqw) {
+  .save {
+    font-size: max(9px, calc(3.3 * min(80vw, 46vh, 380px) / 100));
+  }
 }
 
 .dd {
@@ -179,11 +248,23 @@
   color: var(--maroon);
 }
 
+@supports not (width: 1cqw) {
+  .dd {
+    font-size: calc(22 * min(80vw, 46vh, 380px) / 100);
+  }
+}
+
 .mm {
   font-family: var(--font-script), cursive;
   font-size: 10cqw;
   line-height: 1;
   color: #9a6b1f;
+}
+
+@supports not (width: 1cqw) {
+  .mm {
+    font-size: calc(10 * min(80vw, 46vh, 380px) / 100);
+  }
 }
 
 .yy {
@@ -193,6 +274,12 @@
   padding-left: 0.2em;
   text-transform: uppercase;
   color: #6b4a3a;
+}
+
+@supports not (width: 1cqw) {
+  .yy {
+    font-size: max(9px, calc(3.3 * min(80vw, 46vh, 380px) / 100));
+  }
 }
 
 .foil {
@@ -434,6 +521,32 @@
   100% {
     opacity: 0;
     transform: translate(34cqw, 30cqw);
+  }
+}
+
+@supports not (width: 1cqw) {
+  @keyframes trail {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    12% {
+      opacity: 1;
+    }
+    35% {
+      transform: translate(calc(32 * min(80vw, 46vh, 380px) / 100), calc(6 * min(80vw, 46vh, 380px) / 100));
+    }
+    60% {
+      transform: translate(calc(4 * min(80vw, 46vh, 380px) / 100), calc(22 * min(80vw, 46vh, 380px) / 100));
+    }
+    85% {
+      opacity: 1;
+      transform: translate(calc(34 * min(80vw, 46vh, 380px) / 100), calc(30 * min(80vw, 46vh, 380px) / 100));
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(34 * min(80vw, 46vh, 380px) / 100), calc(30 * min(80vw, 46vh, 380px) / 100));
+    }
   }
 }
 

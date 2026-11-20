@@ -1,7 +1,6 @@
 /* Page 4 — the countdown under a night sky. Every animation is transform/opacity (GPU). */
 .section {
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   grid-template-rows: 1fr auto;
@@ -13,6 +12,13 @@
   scroll-snap-align: start;
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .section {
+    min-height: 100vh;
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 /* ---------- sky ---------- */
@@ -42,6 +48,19 @@
   border-radius: 50%;
   box-shadow: inset calc(clamp(38px, 10vw, 64px) * -0.24) calc(clamp(38px, 10vw, 64px) * 0.1) 0 0 #f8e7bf;
   filter: drop-shadow(0 0 14px rgba(248, 231, 191, 0.45));
+}
+
+@supports not (height: 1svh) {
+  .moon {
+    top: clamp(40px, 9vh, 90px);
+  }
+}
+
+/* Browsers before Chrome 88 / iOS 15 ignore `aspect-ratio`: give the box its height directly. */
+@supports not (aspect-ratio: 1) {
+  .moon {
+    height: clamp(38px, 10vw, 64px);
+  }
 }
 
 /* ---------- sky lanterns (rise from behind the palace) ---------- */
@@ -78,6 +97,12 @@
   pointer-events: none;
 }
 
+@supports not (height: 1svh) {
+  .skyline {
+    height: clamp(190px, 30vh, 300px);
+  }
+}
+
 /* gentle shimmer on the lake (moves with transform only) */
 .water {
   position: absolute;
@@ -97,6 +122,12 @@
   pointer-events: none;
 }
 
+@supports not (height: 1svh) {
+  .water {
+    height: calc(clamp(190px, 30vh, 300px) * 0.31);
+  }
+}
+
 /* ---------- content ---------- */
 .content {
   position: relative;
@@ -107,6 +138,13 @@
   align-items: center;
   text-align: center;
   gap: clamp(6px, 1.4svh, 12px);
+}
+
+@supports not (height: 1svh) {
+  .content {
+    padding: clamp(64px, 11vh, 120px) 18px 0;
+    gap: clamp(6px, 1.4vh, 12px);
+  }
 }
 
 .reveal {
@@ -157,6 +195,12 @@
   display: flex;
   gap: clamp(8px, 2.6vw, 18px);
   margin: clamp(10px, 2.4svh, 22px) 0 6px;
+}
+
+@supports not (height: 1svh) {
+  .countdown {
+    margin: clamp(10px, 2.4vh, 22px) 0 6px;
+  }
 }
 
 .unit {
@@ -235,6 +279,12 @@
   margin-top: clamp(10px, 2svh, 18px);
 }
 
+@supports not (height: 1svh) {
+  .actions {
+    margin-top: clamp(10px, 2vh, 18px);
+  }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -273,6 +323,12 @@
   gap: 4px;
   padding: clamp(150px, 24svh, 230px) 18px max(22px, env(safe-area-inset-bottom));
   text-align: center;
+}
+
+@supports not (height: 1svh) {
+  .footer {
+    padding: clamp(150px, 24vh, 230px) 18px max(22px, env(safe-area-inset-bottom));
+  }
 }
 
 /* scroll cue down to the celebrations */
@@ -321,6 +377,20 @@
   }
   100% {
     transform: translate3d(calc(var(--drift) * 0.4), -100svh, 0) rotate(-3deg) scale(0.7);
+  }
+}
+
+@supports not (height: 1svh) {
+  @keyframes rise {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(-3deg);
+    }
+    50% {
+      transform: translate3d(var(--drift), -48vh, 0) rotate(3deg);
+    }
+    100% {
+      transform: translate3d(calc(var(--drift) * 0.4), -100vh, 0) rotate(-3deg) scale(0.7);
+    }
   }
 }
 

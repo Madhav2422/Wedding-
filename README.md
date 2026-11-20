@@ -146,3 +146,16 @@ Measured with the CPU slowed 4× to simulate a phone:
 
 When you add new animations, stick to `transform` and `opacity`, and avoid running JavaScript at the moment
 something starts moving.
+
+## Works on older phones too
+
+Many Android phones open WhatsApp links in a browser built on an old engine (Samsung Internet, Mi, Vivo,
+Oppo browsers…), and some guests have older iPhones. Out of the box, Next.js only builds for Chrome 111+ /
+iOS 16.4+, and on anything older the gate could not be tapped. So:
+
+- `browserslist` in `package.json` builds the site for Chrome 64+ and iOS 12+.
+- The CSS gives older browsers fallbacks (see the note at the top of `src/app/globals.css`).
+- A tiny script in `src/app/layout.tsx` opens the gate the moment it is touched, even while a slow
+  phone is still loading the page.
+- With the phone's "Remove animations" setting on, the doors still open; only the zoom through the arch
+  becomes a fade.

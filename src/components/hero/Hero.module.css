@@ -7,7 +7,6 @@
  */
 .hero {
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   overflow: hidden;
@@ -17,6 +16,13 @@
   /* when scrolled away, the browser skips drawing this page entirely (saves battery) */
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .hero {
+    min-height: 100vh;
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 /* ---------- background ---------- */
@@ -46,9 +52,24 @@
   translate: -50% 50%;
 }
 
+/* Older phone browsers (before Chrome 104 / iOS 14.1) ignore `translate:` — same position the old way. */
+@supports not (translate: 0) {
+  .cornerL {
+    left: calc(min(60vmin, 440px) / -2);
+    bottom: calc(min(60vmin, 440px) / -2);
+  }
+}
+
 .cornerR {
   right: 0;
   translate: 50% 50%;
+}
+
+@supports not (translate: 0) {
+  .cornerR {
+    right: calc(min(60vmin, 440px) / -2);
+    bottom: calc(min(60vmin, 440px) / -2);
+  }
 }
 
 .dust {
@@ -61,7 +82,6 @@
   z-index: 0;
   isolation: isolate;
   grid-area: 1 / 1;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   place-items: center;
@@ -75,11 +95,19 @@
   animation: approach var(--approach, 2.4s) cubic-bezier(0.45, 0, 0.25, 1) var(--base, 0s) backwards paused;
 }
 
+@supports not (height: 1svh) {
+  .scaler {
+    min-height: 100vh;
+    padding: clamp(84px, 12vh, 128px) 20px clamp(44px, 7vh, 76px);
+  }
+}
+
 .hero:not(.settled) .scaler {
   will-change: transform;
 }
 
-.revealed .scaler {
+.revealed .scaler,
+:global(html.gate-go) .scaler {
   animation-play-state: running;
 }
 
@@ -94,6 +122,12 @@
   color: #b8862b;
   opacity: 0.1;
   pointer-events: none;
+}
+
+@supports not (translate: 0) {
+  .mandalaWrap {
+    transform: translate(-50%, -50%);
+  }
 }
 
 .mandala {
@@ -115,12 +149,26 @@
   pointer-events: none;
 }
 
+@supports not (height: 1svh) {
+  .arch {
+    top: 2.5vh;
+    height: calc(100% - 4.5vh);
+  }
+}
+
+@supports not (translate: 0) {
+  .arch {
+    transform: translateX(-50%);
+  }
+}
+
 .archPath {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
 }
 
-.settled .archPath {
+.settled .archPath,
+:global(html.gate-gone) .archPath {
   animation: draw 2.8s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
 }
 
@@ -153,7 +201,14 @@
   animation: drop 1.6s cubic-bezier(0.3, 1.45, 0.5, 1) calc(var(--base, 0s) + 1.3s + var(--t) * 0.5s) backwards paused;
 }
 
-.revealed .ladiWrap {
+@supports not (translate: 0) {
+  .ladiWrap {
+    margin-left: -13px; /* half the 26px marigold string (it animates transform) */
+  }
+}
+
+.revealed .ladiWrap,
+:global(html.gate-go) .ladiWrap {
   animation-play-state: running;
 }
 
@@ -184,6 +239,12 @@
   gap: clamp(8px, 1.8svh, 18px);
 }
 
+@supports not (height: 1svh) {
+  .content {
+    gap: clamp(8px, 1.8vh, 18px);
+  }
+}
+
 /* staggered entrance — attached paused, played when the gates open */
 .item {
   opacity: 0;
@@ -195,7 +256,8 @@
   animation-duration: 1.7s;
 }
 
-.revealed .item {
+.revealed .item,
+:global(html.gate-go) .item {
   animation-play-state: running;
 }
 
@@ -204,6 +266,12 @@
   font-size: clamp(16px, 2.3svh, 21px);
   color: #9a6b1f;
   letter-spacing: 0.03em;
+}
+
+@supports not (height: 1svh) {
+  .invocation {
+    font-size: clamp(16px, 2.3vh, 21px);
+  }
 }
 
 .names {
@@ -237,6 +305,12 @@
   background-clip: text;
   color: transparent;
   position: relative;
+}
+
+@supports not (height: 1svh) {
+  .name {
+    font-size: clamp(64px, min(19vw, 12.5vh), 132px);
+  }
 }
 
 /*
@@ -298,6 +372,12 @@
   color: #7a5a48;
 }
 
+@supports not (height: 1svh) {
+  .tagline {
+    font-size: clamp(19px, 2.8vh, 25px);
+  }
+}
+
 /* ---------- scroll cue ---------- */
 .scrollCue {
   position: absolute;
@@ -320,7 +400,14 @@
   pointer-events: none;
 }
 
-.settled .scrollCue {
+@supports not (translate: 0) {
+  .scrollCue {
+    transform: translateX(-50%);
+  }
+}
+
+.settled .scrollCue,
+:global(html.gate-gone) .scrollCue {
   animation: fadeIn 1s ease 1.8s both;
   pointer-events: auto;
 }
@@ -419,7 +506,9 @@
   .scaler,
   .revealed .scaler,
   .ladiWrap,
-  .revealed .ladiWrap {
+  .revealed .ladiWrap,
+  :global(html.gate-go) .scaler,
+  :global(html.gate-go) .ladiWrap {
     transform: none;
     animation: none;
   }
@@ -435,7 +524,8 @@
     animation: none;
   }
 
-  .settled .archPath {
+  .settled .archPath,
+  :global(html.gate-gone) .archPath {
     animation-duration: 0.01s;
   }
 }

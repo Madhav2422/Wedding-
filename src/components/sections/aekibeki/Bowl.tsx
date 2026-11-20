@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { idle } from "@/lib/idle";
+import { observeWidth } from "@/lib/observeWidth";
 import { seeded } from "@/lib/random";
 import { coin, leaf, makeSprite, marigoldFlower, marigoldPetal, paintMilk, ring, rosePetal, type Sprite } from "./art";
 
@@ -335,15 +336,13 @@ export default function Bowl(props: Props) {
       { rootMargin: "100% 0px" },
     );
     io.observe(canvas);
-    const ro = new ResizeObserver(([entry]) => {
+    const stopWatching = observeWidth(canvas, (w) => {
       const S = sim.current;
-      const w = entry.contentRect.width;
       if (S.ready ? Math.abs(w - S.size) > 4 : w >= 40) build();
     });
-    ro.observe(canvas);
     return () => {
       io.disconnect();
-      ro.disconnect();
+      stopWatching();
       cancelAnimationFrame(sim.current.raf);
       sim.current.raf = 0;
     };

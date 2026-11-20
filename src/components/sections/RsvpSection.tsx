@@ -12,7 +12,13 @@ const step = (i: number) => ({ "--i": i }) as CSSProperties;
 const STORE_KEY = `rsvp:${wedding.groom}-${wedding.bride}`;
 const replyBy = dateParts(wedding.rsvp.respondBy);
 const MAX = wedding.rsvp.maxGuests;
-const list = (items: string[]) => new Intl.ListFormat("en", { type: "conjunction" }).format(items);
+/** "Mehendi, Sangeet and Wedding" (Intl.ListFormat is missing in some older phone browsers). */
+const list = (items: string[]) =>
+  typeof Intl.ListFormat === "function"
+    ? new Intl.ListFormat("en", { type: "conjunction" }).format(items)
+    : items.length > 1
+      ? `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`
+      : items.join("");
 const eventNames = (ids: string[]) => wedding.events.filter((e) => ids.includes(e.id)).map((e) => e.name);
 
 type Reply = {

@@ -5,7 +5,6 @@
   --gold: #b8862b;
   --gold-soft: rgba(184, 134, 43, 0.45);
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -18,6 +17,14 @@
   scroll-snap-align: start;
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .section {
+    min-height: 100vh;
+    padding: clamp(64px, 10vh, 100px) 16px 0;
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 .section::before {
@@ -109,6 +116,12 @@
     0 0 0 6px #fffaf0,
     0 0 0 7px var(--gold-soft),
     0 24px 50px -22px rgba(74, 30, 20, 0.45);
+}
+
+@supports not (height: 1svh) {
+  .card {
+    margin-top: clamp(18px, 3vh, 28px);
+  }
 }
 
 .form {
@@ -320,6 +333,13 @@
   animation: serve 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
 }
 
+/* Browsers before Chrome 88 / iOS 15 ignore `aspect-ratio`: give the box its height directly. */
+@supports not (aspect-ratio: 1) {
+  .plate {
+    height: 56px;
+  }
+}
+
 .served .plate {
   animation-delay: calc(var(--i) * 0.09s);
 }
@@ -350,6 +370,13 @@
   display: flex;
   gap: 5px;
   pointer-events: none;
+}
+
+/* Older phone browsers (before Chrome 104 / iOS 14.1) ignore `translate:` — same position the old way. */
+@supports not (translate: 0) {
+  .steam {
+    transform: translateX(-50%);
+  }
 }
 
 .steam b {
@@ -528,6 +555,12 @@
   gap: 4px;
   padding: clamp(36px, 7svh, 64px) 18px max(26px, env(safe-area-inset-bottom));
   text-align: center;
+}
+
+@supports not (height: 1svh) {
+  .footer {
+    padding: clamp(36px, 7vh, 64px) 18px max(26px, env(safe-area-inset-bottom));
+  }
 }
 
 .hashtag {

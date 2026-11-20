@@ -14,6 +14,10 @@ export function useInView<T extends Element>(threshold = 0.3) {
   useEffect(() => {
     const el = ref.current;
     if (!el || inView) return;
+    if (typeof IntersectionObserver !== "function") {
+      setInView(true); // very old browser: just show the page
+      return;
+    }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

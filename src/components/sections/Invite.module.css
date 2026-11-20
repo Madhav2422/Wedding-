@@ -1,7 +1,6 @@
 /* Page 2 — "We invite you". Entrance uses transform/opacity transitions only (GPU). */
 .section {
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   place-items: center;
@@ -12,6 +11,14 @@
   scroll-snap-align: start;
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .section {
+    min-height: 100vh;
+    padding: clamp(28px, 5vh, 96px) 18px;
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 /* faint Mughal ogee lattice, like the palace wall */
@@ -38,6 +45,13 @@
   pointer-events: none;
 }
 
+/* Older phone browsers (before Chrome 104 / iOS 14.1) ignore `translate:` — same position the old way. */
+@supports not (translate: 0) {
+  .mandalaWrap {
+    margin: calc(min(140vmin, 1100px) / -2) 0 0 calc(min(140vmin, 1100px) / -2);
+  }
+}
+
 .mandala {
   display: block;
   width: 100%;
@@ -56,6 +70,12 @@
   transition:
     transform 1.5s cubic-bezier(0.16, 1, 0.3, 1),
     opacity 1s ease;
+}
+
+@supports not (height: 1svh) {
+  .card {
+    padding: clamp(140px, min(38vw, 20vh), 190px) clamp(24px, 7vw, 54px) clamp(44px, 7vh, 76px);
+  }
 }
 
 .inView .card {
@@ -97,6 +117,12 @@
   gap: clamp(5px, 1.1svh, 12px);
 }
 
+@supports not (height: 1svh) {
+  .inner {
+    gap: clamp(5px, 1.1vh, 12px);
+  }
+}
+
 /* staggered line-by-line entrance */
 .reveal {
   opacity: 0;
@@ -121,6 +147,14 @@
   margin-left: calc(clamp(64px, min(20vw, 10svh), 96px) / -2);
 }
 
+@supports not (height: 1svh) {
+  .kalashWrap {
+    top: clamp(40px, min(12vw, 6.5vh), 62px);
+    width: clamp(64px, min(20vw, 10vh), 96px);
+    margin-left: calc(clamp(64px, min(20vw, 10vh), 96px) / -2);
+  }
+}
+
 .kalash {
   position: relative;
   display: block;
@@ -138,6 +172,20 @@
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 214, 120, 0.55) 0%, rgba(255, 214, 120, 0) 65%);
   animation: halo 4s ease-in-out infinite;
+}
+
+@supports not (translate: 0) {
+  .halo {
+    margin: -95% 0 0 -95%; /* it animates transform; % margins follow the parent's width */
+  }
+}
+
+/* Browsers before Chrome 88 / iOS 15 ignore `aspect-ratio`: give the box its height directly. */
+@supports not (aspect-ratio: 1) {
+  .halo {
+    height: 0;
+    padding-top: 190%;
+  }
 }
 
 /* ---------- typography ---------- */
@@ -163,6 +211,12 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@supports not (height: 1svh) {
+  .title {
+    font-size: clamp(40px, min(11vw, 8vh), 74px);
+  }
 }
 
 .flourish {
@@ -194,6 +248,12 @@
   font-size: clamp(40px, min(11.5vw, 6.4svh), 60px);
   line-height: 1.05;
   color: var(--maroon);
+}
+
+@supports not (height: 1svh) {
+  .name {
+    font-size: clamp(40px, min(11.5vw, 6.4vh), 60px);
+  }
 }
 
 .with {

@@ -5,7 +5,9 @@ import { wedding } from "@/config/wedding";
 import { fadeIn, playTempleBell, prepareAudio, prepareMusic } from "@/lib/sound";
 import MusicToggle from "./effects/MusicToggle";
 import PetalShower from "./effects/PetalShower";
-import PalaceGate, { GATE_TIMING } from "./gate/PalaceGate";
+import SafeSection from "./SafeSection";
+import PalaceGate from "./gate/PalaceGate";
+import { GATE_TIMING } from "./gate/timing";
 import Hero from "./hero/Hero";
 import AekiBekiSection from "./sections/AekiBekiSection";
 import CountdownSection from "./sections/CountdownSection";
@@ -16,10 +18,15 @@ import ScratchSection from "./sections/ScratchSection";
 
 type Stage = "closed" | "opening" | "open";
 
+/** Left on `window` by the early-tap script in app/layout.tsx. */
+type EarlyTapWindow = Window & { __gateReady?: boolean; __gateTap?: number };
+
 const MUSIC: string = wedding.music;
 const MUSIC_START: number = wedding.musicStart;
-/** Seconds after the tap when the petal shower is created (its first petals fall at 0.9 s). */
+/** Seconds after the tap when the petal shower is created… */
 const SHOWER_AFTER = 0.35;
+/** …and when its first petals fall. */
+const PETALS_AT = 0.9;
 
 /**
  * The landing experience:
@@ -33,12 +40,12 @@ export default function Invitation() {
   const [stage, setStage] = useState<Stage>("closed");
   const [skipped, setSkipped] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
-  const [shower, setShower] = useState(false);
+  /** Delay (s) before the petal shower's first petals; null = no shower yet. */
+  const [shower, setShower] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoPaused = useRef(false);
-  const timer = useRef<number | undefined>(undefined);
-  const showerTimer = useRef<number | undefined>(undefined);
-  const begun = useRef(false);
+  /** When the gate was tapped (performance.now() time); null until then. */
+  const tappedAt = useRef<number | null>(null);
   const soundStarted = useRef(false);
 
   useEffect(() => {
@@ -65,8 +72,6 @@ export default function Invitation() {
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
-      window.clearTimeout(timer.current);
-      window.clearTimeout(showerTimer.current);
       window.clearTimeout(warm);
       document.removeEventListener("visibilitychange", onVisibility);
     };
@@ -75,9 +80,13 @@ export default function Invitation() {
   // Pause every animation on pages that are off screen (see globals.css). One observer, no
   // React re-renders: it only flips an attribute when a page comes near or leaves the screen.
   useEffect(() => {
+    if (typeof IntersectionObserver !== "function") return; // very old browser: animate everything
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) e.target.toggleAttribute("data-offscreen", !e.isIntersecting);
+        for (const e of entries) {
+          if (e.isIntersecting) e.target.removeAttribute("data-offscreen");
+          else e.target.setAttribute("data-offscreen", "");
+        }
       },
       // -2px: a page whose edge merely touches the screen's edge doesn't count as visible
       { rootMargin: "-2px 0px" },
@@ -100,22 +109,35 @@ export default function Invitation() {
    * Finger down on the gate: the seal breaks and the doors start straight away. Everything
    * else waits a moment (the petal shower is created 350 ms later), so the first frame after
    * the touch stays light and the doors move instantly — even on slower phones.
+   *
+   * `elapsed`: seconds since the tap, when the early-tap script already started the opening
+   * before this code had loaded — the timeline below then picks up where the animation is.
    */
-  const begin = useCallback(() => {
-    if (begun.current) return;
-    begun.current = true;
+  const begin = useCallback((elapsed = 0) => {
+    if (tappedAt.current !== null) return;
+    tappedAt.current = performance.now() - elapsed * 1000;
     setStage("opening");
-    showerTimer.current = window.setTimeout(() => setShower(true), SHOWER_AFTER * 1000);
-    timer.current = window.setTimeout(() => setStage("open"), GATE_TIMING.total * 1000);
   }, []);
 
-  /** The completed tap: phones only allow sound from a finished tap, so the bell & song start here. */
-  const open = useCallback(() => {
-    begin();
+  // The rest of the opening, timed from the tap itself: the petal shower, then the gate leaves.
+  useEffect(() => {
+    if (stage !== "opening" || tappedAt.current === null) return;
+    const elapsed = (performance.now() - tappedAt.current) / 1000;
+    const petalsIn = Math.max(0, PETALS_AT - Math.max(elapsed, SHOWER_AFTER));
+    const showerTimer = window.setTimeout(() => setShower(petalsIn), Math.max(0, SHOWER_AFTER - elapsed) * 1000);
+    const openTimer = window.setTimeout(() => setStage("open"), Math.max(0, GATE_TIMING.total - elapsed) * 1000);
+    return () => {
+      window.clearTimeout(showerTimer);
+      window.clearTimeout(openTimer);
+    };
+  }, [stage]);
+
+  /** The bell (only right after the tap) and the song. */
+  const startSound = useCallback((elapsed = 0) => {
     if (soundStarted.current) return;
     soundStarted.current = true;
 
-    if (wedding.chime) playTempleBell();
+    if (wedding.chime && elapsed < 1.5) playTempleBell();
     const audio = prepareMusic(MUSIC, MUSIC_START);
     if (audio) {
       audioRef.current = audio;
@@ -130,33 +152,66 @@ export default function Invitation() {
           /* no song file yet, or the browser said no — the invitation works without it */
         });
     }
-  }, [begin]);
+  }, []);
+
+  /** The completed tap: phones only allow sound from a finished tap, so the bell & song start here. */
+  const open = useCallback(() => {
+    begin();
+    startSound();
+  }, [begin, startSound]);
+
+  // From here on React answers taps itself. If the guest tapped while the page was still
+  // loading, the early-tap script (app/layout.tsx) has already started the opening: catch up.
+  useEffect(() => {
+    const w = window as EarlyTapWindow;
+    w.__gateReady = true;
+    if (w.__gateTap == null) return;
+    const elapsed = Math.max(0, (performance.now() - w.__gateTap) / 1000);
+    begin(elapsed);
+    startSound(elapsed); // Android allows it after a tap; iPhones may not — that's fine
+  }, [begin, startSound]);
 
   return (
     <main>
-      <Hero
-        revealed={stage !== "closed"}
-        settled={stage === "open"}
-        delay={skipped ? 0 : GATE_TIMING.zoom}
-        approach={GATE_TIMING.zoomDuration}
-      />
+      <SafeSection>
+        <Hero
+          revealed={stage !== "closed"}
+          settled={stage === "open"}
+          delay={skipped ? 0 : GATE_TIMING.zoom}
+          approach={GATE_TIMING.zoomDuration}
+        />
+      </SafeSection>
       {/* The pages, revealed one by one as the guest scrolls */}
-      <InviteSection />
-      <ScratchSection />
-      <CountdownSection />
+      <SafeSection>
+        <InviteSection />
+      </SafeSection>
+      <SafeSection>
+        <ScratchSection />
+      </SafeSection>
+      <SafeSection>
+        <CountdownSection />
+      </SafeSection>
       {wedding.events.map((event, i) => (
-        <EventSection key={event.id} event={event} index={i} />
+        <SafeSection key={event.id}>
+          <EventSection event={event} index={i} />
+        </SafeSection>
       ))}
-      {wedding.aekiBeki && <AekiBekiSection />}
-      <RsvpSection />
+      {wedding.aekiBeki && (
+        <SafeSection>
+          <AekiBekiSection />
+        </SafeSection>
+      )}
+      <SafeSection>
+        <RsvpSection />
+      </SafeSection>
 
       {stage !== "open" && <PalaceGate stage={stage} onBegin={begin} onOpen={open} onPrepare={prepare} />}
 
-      {shower && !skipped && (
+      {shower !== null && !skipped && (
         <PetalShower
           count={48}
           seed={21}
-          startDelay={0.9 - SHOWER_AFTER}
+          startDelay={shower}
           spread={2.4}
           minDuration={4.5}
           maxDuration={7.5}

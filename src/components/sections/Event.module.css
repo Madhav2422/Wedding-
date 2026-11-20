@@ -3,10 +3,10 @@
   --ink: #fbe9c4;
   --soft: rgba(251, 233, 196, 0.74);
   --accent: #f2c96b;
+  --accent-rgb: 242, 201, 107; /* the same colour as numbers, for see-through versions */
   --line: rgba(242, 201, 107, 0.42);
   --btn-ink: #2a0512;
   position: relative;
-  min-height: 100vh;
   min-height: 100svh;
   display: grid;
   place-items: center;
@@ -17,6 +17,14 @@
   scroll-snap-align: start;
   content-visibility: auto;
   contain-intrinsic-size: auto 100svh;
+}
+
+@supports not (height: 1svh) {
+  .section {
+    min-height: 100vh;
+    padding: clamp(18px, 3vh, 64px) 18px clamp(20px, 3.2vh, 64px);
+    contain-intrinsic-size: 100vh;
+  }
 }
 
 /* a fine gold hairline where one page meets the next */
@@ -43,12 +51,14 @@
 
 .mehendi {
   --accent: #f6c453;
+  --accent-rgb: 246, 196, 83;
   --btn-ink: #0d2618;
   background: radial-gradient(ellipse 90% 70% at 30% 38%, #1f4f33 0%, #13361f 48%, #0a2215 100%);
 }
 
 .sangeet {
   --accent: #f7c6e0;
+  --accent-rgb: 247, 198, 224;
   --line: rgba(247, 198, 224, 0.4);
   --btn-ink: #1f0832;
   background: radial-gradient(ellipse 90% 70% at 70% 38%, #4f1667 0%, #2c0b44 50%, #16062a 100%);
@@ -117,9 +127,21 @@
   gap: clamp(10px, 1.6svh, 26px);
 }
 
+@supports not (height: 1svh) {
+  .layout {
+    gap: clamp(10px, 1.6vh, 26px);
+  }
+}
+
 .artCol {
   position: relative;
   width: min(72vw, 30svh, 340px);
+}
+
+@supports not (height: 1svh) {
+  .artCol {
+    width: min(72vw, 30vh, 340px);
+  }
 }
 
 .halo {
@@ -131,8 +153,23 @@
   translate: -50% -50%;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 62%);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.3) 0%, transparent 62%);
   pointer-events: none;
+}
+
+/* Older phone browsers (before Chrome 104 / iOS 14.1) ignore `translate:` — same position the old way. */
+@supports not (translate: 0) {
+  .halo {
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Browsers before Chrome 88 / iOS 15 ignore `aspect-ratio`: give the box its height directly. */
+@supports not (aspect-ratio: 1) {
+  .halo {
+    height: 0;
+    padding-top: 170%;
+  }
 }
 
 /* museum-style caption under the painting */
@@ -214,6 +251,12 @@
   font-weight: 400;
 }
 
+@supports not (height: 1svh) {
+  .title {
+    margin: clamp(6px, 1.2vh, 12px) 0 0;
+  }
+}
+
 .deva {
   font-family: var(--font-deva), serif;
   font-size: clamp(17px, 4.4vw, 22px);
@@ -248,6 +291,12 @@
   margin-top: clamp(12px, 2.2svh, 20px);
 }
 
+@supports not (height: 1svh) {
+  .date {
+    margin-top: clamp(12px, 2.2vh, 20px);
+  }
+}
+
 .dateSide {
   min-width: 96px;
   padding: 7px 2px 6px;
@@ -266,7 +315,7 @@
   font-size: clamp(38px, 10vw, 50px);
   line-height: 1;
   color: var(--accent);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+  text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.45);
 }
 
 .time {
@@ -284,6 +333,12 @@
   font-weight: 600;
   font-size: clamp(19px, 5vw, 23px);
   color: var(--ink);
+}
+
+@supports not (height: 1svh) {
+  .venue {
+    margin-top: clamp(12px, 2.2vh, 20px);
+  }
 }
 
 .address {
@@ -310,6 +365,12 @@
   color: var(--soft);
 }
 
+@supports not (height: 1svh) {
+  .highlights {
+    margin: clamp(10px, 1.8vh, 16px) 0 0;
+  }
+}
+
 .highlights li + li::before {
   content: "✦";
   margin: 0 0.7em;
@@ -330,6 +391,12 @@
   color: var(--ink);
 }
 
+@supports not (height: 1svh) {
+  .dress {
+    margin-top: clamp(10px, 1.8vh, 16px);
+  }
+}
+
 .dress span {
   font-family: var(--font-cinzel), serif;
   font-style: normal;
@@ -347,13 +414,19 @@
   margin-top: clamp(14px, 2.4svh, 22px);
 }
 
+@supports not (height: 1svh) {
+  .actions {
+    margin-top: clamp(14px, 2.4vh, 22px);
+  }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 11px 18px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
+  border: 1px solid rgba(var(--accent-rgb), 0.75);
   background: rgba(0, 0, 0, 0.22);
   font-family: var(--font-cinzel), serif;
   font-size: 11px;
@@ -393,6 +466,12 @@
     flex-shrink: 0;
   }
 
+  @supports not (height: 1svh) {
+    .artCol {
+      width: min(42vw, 64vh, 540px);
+    }
+  }
+
   .name {
     font-size: clamp(64px, 6.4vw, 96px);
   }
@@ -402,6 +481,12 @@
 @media (max-height: 700px) and (max-width: 899px) {
   .artCol {
     width: min(64vw, 28svh, 300px);
+  }
+
+  @supports not (height: 1svh) {
+    .artCol {
+      width: min(64vw, 28vh, 300px);
+    }
   }
 
   .name {
@@ -426,6 +511,25 @@
   }
 }
 
+@supports not (height: 1svh) {
+  @keyframes drift {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.8;
+    }
+    90% {
+      opacity: 0.6;
+    }
+    100% {
+      transform: translate3d(var(--drift), calc(100vh + 40px), 0) rotate(360deg);
+      opacity: 0;
+    }
+  }
+}
+
 @keyframes ember {
   0% {
     transform: translate3d(0, 0, 0);
@@ -437,6 +541,22 @@
   100% {
     transform: translate3d(var(--drift), calc(-100svh - 40px), 0);
     opacity: 0;
+  }
+}
+
+@supports not (height: 1svh) {
+  @keyframes ember {
+    0% {
+      transform: translate3d(0, 0, 0);
+      opacity: 0;
+    }
+    15% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate3d(var(--drift), calc(-100vh - 40px), 0);
+      opacity: 0;
+    }
   }
 }
 

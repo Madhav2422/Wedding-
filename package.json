@@ -7,6 +7,14 @@
     "build": "next build",
     "start": "next start"
   },
+  "browserslist": [
+    "chrome >= 64",
+    "edge >= 79",
+    "firefox >= 67",
+    "safari >= 12",
+    "ios_saf >= 12",
+    "samsung >= 9"
+  ],
   "dependencies": {
     "motion": "^14.10.1",
     "next": "^16.4.5",
