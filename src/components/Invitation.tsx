@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { wedding } from "@/config/wedding";
 import { fadeIn, playTempleBell, prepareAudio, prepareMusic } from "@/lib/sound";
@@ -16,10 +17,13 @@ import InviteSection from "./sections/InviteSection";
 import RsvpSection from "./sections/RsvpSection";
 import ScratchSection from "./sections/ScratchSection";
 
+/** Hidden test panel (?debug) — only downloaded when asked for. */
+const DebugPanel = dynamic(() => import("./DebugPanel"), { ssr: false });
+
 type Stage = "closed" | "opening" | "open";
 
 /** Left on `window` by the early-tap script in app/layout.tsx. */
-type EarlyTapWindow = Window & { __gateReady?: boolean; __gateTap?: number };
+type EarlyTapWindow = Window & { __gateReady?: boolean; __gateReadyAt?: number; __gateTap?: number };
 
 const MUSIC: string = wedding.music;
 const MUSIC_START: number = wedding.musicStart;
@@ -27,6 +31,8 @@ const MUSIC_START: number = wedding.musicStart;
 const SHOWER_AFTER = 0.35;
 /** …and when its first petals fall. */
 const PETALS_AT = 0.9;
+/** Phone test (?nosound): leave all sound out, to rule it out as the cause of a problem. */
+const soundOff = () => new URLSearchParams(window.location.search).has("nosound");
 
 /**
  * The landing experience:
@@ -35,11 +41,13 @@ const PETALS_AT = 0.9;
  *   open    → gates removed, invitation is fully interactive
  *
  * Tip: add ?skipIntro to the URL to jump straight to the invitation while designing.
+ * Testing a phone: ?debug shows what it does (see DebugPanel); &nosound leaves out the sound.
  */
 export default function Invitation() {
   const [stage, setStage] = useState<Stage>("closed");
   const [skipped, setSkipped] = useState(false);
   const [musicOn, setMusicOn] = useState(false);
+  const [debug, setDebug] = useState(false);
   /** Delay (s) before the petal shower's first petals; null = no shower yet. */
   const [shower, setShower] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -49,12 +57,15 @@ export default function Invitation() {
   const soundStarted = useRef(false);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("skipIntro")) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("debug")) setDebug(true);
+    if (params.has("skipIntro")) {
       setSkipped(true);
       setStage("open");
     }
     // quietly download the bell (and the song) once the page has settled, so the tap is instant
     const warm = window.setTimeout(() => {
+      if (soundOff()) return;
       if (wedding.chime) prepareAudio();
       prepareMusic(MUSIC, MUSIC_START);
     }, 1500);
@@ -102,7 +113,7 @@ export default function Invitation() {
 
   // Finger-down: make sure the bell is loading (iPhones only fetch audio after a touch).
   const prepare = useCallback(() => {
-    if (wedding.chime) prepareAudio();
+    if (wedding.chime && !soundOff()) prepareAudio();
   }, []);
 
   /**
@@ -110,12 +121,12 @@ export default function Invitation() {
    * else waits a moment (the petal shower is created 350 ms later), so the first frame after
    * the touch stays light and the doors move instantly — even on slower phones.
    *
-   * `elapsed`: seconds since the tap, when the early-tap script already started the opening
-   * before this code had loaded — the timeline below then picks up where the animation is.
+   * The doors themselves were already set off by the early-tap script in app/layout.tsx, at
+   * the very first touch (`__gateTap`); this times everything else from that same moment.
    */
-  const begin = useCallback((elapsed = 0) => {
+  const begin = useCallback(() => {
     if (tappedAt.current !== null) return;
-    tappedAt.current = performance.now() - elapsed * 1000;
+    tappedAt.current = (window as EarlyTapWindow).__gateTap ?? performance.now();
     setStage("opening");
   }, []);
 
@@ -136,6 +147,7 @@ export default function Invitation() {
   const startSound = useCallback((elapsed = 0) => {
     if (soundStarted.current) return;
     soundStarted.current = true;
+    if (soundOff()) return;
 
     if (wedding.chime && elapsed < 1.5) playTempleBell();
     const audio = prepareMusic(MUSIC, MUSIC_START);
@@ -160,15 +172,15 @@ export default function Invitation() {
     startSound();
   }, [begin, startSound]);
 
-  // From here on React answers taps itself. If the guest tapped while the page was still
-  // loading, the early-tap script (app/layout.tsx) has already started the opening: catch up.
+  // React is ready. If the guest tapped while the page was still loading, the early-tap script
+  // (app/layout.tsx) has already started the opening: catch up with it.
   useEffect(() => {
     const w = window as EarlyTapWindow;
     w.__gateReady = true;
+    w.__gateReadyAt = performance.now();
     if (w.__gateTap == null) return;
-    const elapsed = Math.max(0, (performance.now() - w.__gateTap) / 1000);
-    begin(elapsed);
-    startSound(elapsed); // Android allows it after a tap; iPhones may not — that's fine
+    begin();
+    startSound((performance.now() - w.__gateTap) / 1000); // Android allows it after a tap; iPhones may not — fine
   }, [begin, startSound]);
 
   return (
@@ -219,6 +231,7 @@ export default function Invitation() {
       )}
 
       {musicOn && <MusicToggle audioRef={audioRef} />}
+      {debug && <DebugPanel />}
     </main>
   );
 }

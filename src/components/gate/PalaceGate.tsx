@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, KeyboardEvent, PointerEvent } from "react";
+import type { CSSProperties, PointerEvent } from "react";
 import { seeded } from "@/lib/random";
 import { n } from "@/lib/svg";
 import GoldDust from "../effects/GoldDust";
@@ -69,27 +69,25 @@ export default function PalaceGate({ stage, onBegin, onOpen, onPrepare }: Props)
     onBegin();
   };
 
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onPrepare?.();
-      onOpen();
-    }
-  };
-
   return (
     <div
       className={`${s.scene} ${opening ? s.opening : ""}`}
       style={timingVars}
       // found by the early-tap script in app/layout.tsx (taps before the page's JS is ready)
       data-gate=""
-      role="button"
-      tabIndex={0}
-      aria-label="Tap to open the wedding invitation"
-      onPointerDown={onDown}
-      onClick={onOpen}
-      onKeyDown={onKey}
     >
+      {/*
+        What the guest taps: a real <button> laid invisibly over the whole gate. Every phone,
+        browser and accessibility helper treats a native button as tappable (Enter and Space
+        work too). A button can't hold the drawings themselves, so it sits on top of them.
+      */}
+      <button
+        type="button"
+        className={s.tap}
+        aria-label="Tap to open the wedding invitation"
+        onPointerDown={onDown}
+        onClick={onOpen}
+      />
       <div className={s.stage}>
         {/* gateBox: sized drawing + gentle intro zoom-out on load */}
         <div className={s.gateBox}>
